@@ -3,10 +3,14 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp>
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
 
+////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
 using namespace std;
 
 GLvoid drawScene(GLvoid);
