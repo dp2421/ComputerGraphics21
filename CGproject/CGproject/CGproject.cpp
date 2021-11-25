@@ -6,11 +6,21 @@
 #include <gl/glm/glm.hpp>
 #include <gl/glm/ext.hpp>
 #include <gl/glm/gtc/matrix_transform.hpp>
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp>
+
+////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
+
+//아항 알게써!!
 
 using namespace std;
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
+GLvoid CubeInitBuffer();
+GLvoid GroudInitBuffer();
+GLvoid InitShader();
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -19,8 +29,6 @@ GLchar* vertexsource, * fragmentsource;
 GLuint vertexShader, fragmentShader;
 GLuint shaderID;
 GLuint s_program;
-
-//GLvoid CubeInitBuffer();
 
 GLvoid Keyboard(void (*func)(unsigned char key, int x, int y));
 GLvoid TimeFunction(int value);
@@ -120,41 +128,41 @@ GLfloat cube[][9] = {
 	{   0.1, 0.1, -0.1,
 		-0.1, 0.1, 0.1,
 		0.1, 0.1, 0.1   },
-	//아랫면
-	{   -0.1, -0.1, 0.1,
-		-0.1, -0.1, -0.1,
-		0.1, -0.1, 0.1   },
-	{   0.1, -0.1, 0.1,
-		-0.1, -0.1, -0.1,
-		0.1, -0.1, -0.1   },
-	//앞면
-	{   -0.1, 0.1, 0.1,
-		-0.1, -0.1, 0.1,
-		0.1, 0.1, 0.1   },
-	{   0.1, 0.1, 0.1,
-		-0.1, -0.1, 0.1,
-		0.1, -0.1, 0.1   },
-	//오른쪽면
-	{   0.1, 0.1, 0.1,
-		0.1, -0.1, 0.1,
-		0.1, 0.1, -0.1   },
-	{   0.1, 0.1, -0.1,
-		0.1, -0.1, 0.1,
-		0.1, -0.1, -0.1   },
-	//뒷면
-	{   0.1, 0.1, -0.1,
-		0.1, -0.1, -0.1,
-		-0.1, 0.1, -0.1   },
-	{   -0.1, 0.1, -0.1,
-		0.1, -0.1, -0.1,
-		-0.1, -0.1, -0.1   },
-	//왼쪽면
-	{   -0.1, 0.1, -0.1,
-		-0.1, -0.1, -0.1,
-		-0.1, 0.1, 0.1   },
-	{   -0.1, 0.1, 0.1,
-		-0.1, -0.1, -0.1,
-		-0.1, -0.1, 0.1   }
+		//아랫면
+		{   -0.1, -0.1, 0.1,
+			-0.1, -0.1, -0.1,
+			0.1, -0.1, 0.1   },
+		{   0.1, -0.1, 0.1,
+			-0.1, -0.1, -0.1,
+			0.1, -0.1, -0.1   },
+			//앞면
+			{   -0.1, 0.1, 0.1,
+				-0.1, -0.1, 0.1,
+				0.1, 0.1, 0.1   },
+			{   0.1, 0.1, 0.1,
+				-0.1, -0.1, 0.1,
+				0.1, -0.1, 0.1   },
+				//오른쪽면
+				{   0.1, 0.1, 0.1,
+					0.1, -0.1, 0.1,
+					0.1, 0.1, -0.1   },
+				{   0.1, 0.1, -0.1,
+					0.1, -0.1, 0.1,
+					0.1, -0.1, -0.1   },
+					//뒷면
+					{   0.1, 0.1, -0.1,
+						0.1, -0.1, -0.1,
+						-0.1, 0.1, -0.1   },
+					{   -0.1, 0.1, -0.1,
+						0.1, -0.1, -0.1,
+						-0.1, -0.1, -0.1   },
+						//왼쪽면
+						{   -0.1, 0.1, -0.1,
+							-0.1, -0.1, -0.1,
+							-0.1, 0.1, 0.1   },
+						{   -0.1, 0.1, 0.1,
+							-0.1, -0.1, -0.1,
+							-0.1, -0.1, 0.1   }
 };
 
 GLfloat cube_color[] = { //Light Pink
@@ -244,6 +252,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		checkS = false;
 		checkD = true;
 		break;
+		/////////////////////////////카메라가 이동할 수 있는게 짜기 편할 것 같아서 x,y,z로 이동할 수 있게 해놨어!!!///////////////////////
 	case 'x':
 		CamPosX += 1.0f;
 		break;
@@ -285,8 +294,6 @@ GLvoid Camera()
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::lookAt(camerapos, cameradirection, cameraup);
 
-	glm::mat4 View = glm::mat4(1.0f);
-
 	GLuint viewlocation = glGetUniformLocation(s_program, "viewTransform");
 	glUniformMatrix4fv(viewlocation, 1, GL_FALSE, value_ptr(view));
 }
@@ -307,19 +314,9 @@ GLvoid Ground()
 	Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 50.0f));
 
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Scale)); //--- modelTransform 변수에 변환 값 적용하기
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_color), ground_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
+	
+	GroudInitBuffer();
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -329,23 +326,14 @@ GLvoid Cube()
 	Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.2f, CubePosZ));
 	glm::mat4 Scale = glm::mat4(1.0f);
 	Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-
 	glm::mat4 Mat_Cube = glm::mat4(1.0f);
 	Mat_Cube = Scale * Trans;
+	
 	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
+	CubeInitBuffer();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
@@ -353,6 +341,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(s_program);
 
 	Camera(); //카메라
 	Projection(); //투영
@@ -360,7 +349,6 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Cube(); //객체 그리기
 
 	glutPostRedisplay();
-	glUseProgram(s_program);
 	glutSwapBuffers();
 }
 
@@ -371,19 +359,16 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(800, 800);
-	glutCreateWindow("실습21");
+	glutCreateWindow("길건너 친구들");
 
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
 	glewInit();
 	make_shaderProgram();
-
 	glEnable(GL_DEPTH_TEST);
 	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 	glBindVertexArray(vao); //--- VAO를 바인드하기
 	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
-
-	//CubeInitBuffer();
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
@@ -393,21 +378,52 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutMainLoop();
 }
 
-//GLvoid CubeInitBuffer()
+GLvoid CubeInitBuffer()
+{
+	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+	glBindVertexArray(vao); //--- VAO를 바인드하기
+	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+}
+
+GLvoid GroudInitBuffer()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_color), ground_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+}
+
+//GLvoid InitShader()
 //{
-//	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
-//	glBindVertexArray(vao); //--- VAO를 바인드하기
-//	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+//	make_vertexShaders(); //--- 버텍스 세이더 만들기
+//	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
+//	//-- shader Program
+//	s_program = glCreateProgram();
 //
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(0);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
-//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(1);
+//	glAttachShader(s_program, vertexShader);
+//	glAttachShader(s_program, fragmentShader);
+//	glLinkProgram(s_program);
+//	
+//	//--- 세이더 삭제하기
+//	glDeleteShader(vertexShader);
+//	glDeleteShader(fragmentShader);
+//	//--- Shader Program 사용하기
+//	glUseProgram(s_program);
 //}
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
