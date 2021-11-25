@@ -15,6 +15,7 @@ using namespace std;
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
+GLvoid CubeInitBuffer();
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -349,7 +350,8 @@ GLvoid Cube()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
-
+	glBindVertexArray(vao);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
@@ -357,14 +359,14 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	glUseProgram(s_program);
+	
 	Camera(); //카메라
 	Projection(); //투영
 	Ground(); //바닥 그리기
 	Cube(); //객체 그리기
 
 	glutPostRedisplay();
-	glUseProgram(s_program);
 	glutSwapBuffers();
 }
 
@@ -375,19 +377,17 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(800, 800);
-	glutCreateWindow("실습21");
+	glutCreateWindow("길건너 친구들");
 
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
 	glewInit();
 	make_shaderProgram();
-
+	//CubeInitBuffer();
 	glEnable(GL_DEPTH_TEST);
 	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
 	glBindVertexArray(vao); //--- VAO를 바인드하기
 	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
-
-	//CubeInitBuffer();
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
@@ -397,22 +397,22 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutMainLoop();
 }
 
-//GLvoid CubeInitBuffer()
-//{
-//	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
-//	glBindVertexArray(vao); //--- VAO를 바인드하기
-//	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(0);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
-//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(1);
-//}
+GLvoid CubeInitBuffer()
+{
+	glGenVertexArrays(1, &vao); //--- VAO 를 지정하고 할당하기
+	glBindVertexArray(vao); //--- VAO를 바인드하기
+	glGenBuffers(2, vbo); //--- 2개의 VBO를 지정하고 할당하기
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+}
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
