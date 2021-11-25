@@ -3,16 +3,20 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp>
-//#include <glm/glm/glm.hpp>
-//#include <glm/glm/ext.hpp>
-//#include <glm/glm/gtc/matrix_transform.hpp>
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
+
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
 
+
+////////////////////미래의 상대방에게 전하는 메시지////////////////////
 //아항 알게써!!
+//하몰겟ㄷㅏ이걸어쩌냐.............initbuffer를 드로우씬에 호출하면,,안되는데,,메모리 내 일반 과제보다 100배정도 올라가더라 ㅠ
 
 using namespace std;
 
@@ -20,7 +24,7 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
 GLvoid CubeInitBuffer();
 GLvoid GroudInitBuffer();
-GLvoid InitShader();
+//GLvoid InitShader();
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -52,6 +56,7 @@ GLfloat CamPosZ = 50.0f;
 //카메라가 보는 방향 변수
 GLfloat CamDirX = CubePosX;
 GLfloat CamDirZ = CubePosZ - 7.0f;
+
 
 //wasd check
 bool checkW = false;
@@ -253,23 +258,29 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		checkD = true;
 		break;
 		/////////////////////////////카메라가 이동할 수 있는게 짜기 편할 것 같아서 x,y,z로 이동할 수 있게 해놨어!!!///////////////////////
+		///////////카메라 이동시 CameraDirection도 같이 변경해주어야 해서 수정///////////
 	case 'x':
 		CamPosX += 1.0f;
+		CamDirX += 1.f;	//요게 추가한거
 		break;
 	case 'y':
 		CamPosY += 1.0f;
+		//CamDirY += 1.f;
 		break;
 	case 'z':
 		CamPosZ += 1.0f;
+		CamDirZ += 1.f;
 		break;
 	case 'X':
 		CamPosX -= 1.0f;
+		CamDirX -= 1.f;
 		break;
 	case 'Y':
 		CamPosY -= 1.0f;
 		break;
 	case 'Z':
 		CamPosZ -= 1.0f;
+		CamDirX -= 1.f;
 		break;
 	case 'q':
 		exit(0);
