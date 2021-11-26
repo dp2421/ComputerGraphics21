@@ -57,6 +57,8 @@ GLfloat CamPosZ = 50.0f;
 GLfloat CamDirX = CubePosX;
 GLfloat CamDirZ = CubePosZ - 7.0f;
 
+//자동차 움직임
+glm::mat4 Carmoving = glm::mat4(1.f);
 
 //wasd check
 bool checkW = false;
@@ -180,9 +182,19 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
+float cnt = -10.f;	//도로의 끝인지, 체크하는 변수
 GLvoid TimeFunction(int value)
 {
+	
 
+	if (cnt >= 10.f){
+		cnt = -10.f;
+		Carmoving = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
+	}
+	else{
+		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
+		cnt += 0.1;
+	}
 	glutPostRedisplay();
 	glutTimerFunc(10, TimeFunction, 1);
 }
@@ -232,7 +244,28 @@ GLvoid Cube()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
+GLvoid Car()
+{
+	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, CubePosZ));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.f, 1.5f, 2.f));
+	glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(4.f, 2.f, 2.f));
+	glm::mat4 BottomTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, -0.3, 0));
 
+
+	glm::mat4 Mat_Car = Carmoving * Trans * Scale;
+	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+	glBindVertexArray(vao[1]);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+
+	Mat_Car = Carmoving * Trans * BottomTrans * BottomScale;
+	TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+	glBindVertexArray(vao[1]);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+}
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -243,6 +276,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Projection(); //투영
 	Ground(); //바닥 그리기
 	Cube(); //객체 그리기
+	Car();
 	//glFrontFace(GL_CCW);
 	glutPostRedisplay();
 	glutSwapBuffers();
