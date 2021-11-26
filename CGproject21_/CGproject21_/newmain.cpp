@@ -16,7 +16,9 @@
 
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
 //아항 알게써!!
-//하몰겟ㄷㅏ이걸어쩌냐.............initbuffer를 드로우씬에 호출하면,,안되는데,,메모리 내 일반 과제보다 100배정도 올라가더라 ㅠ
+//계산 쉽게 전체적인 단위 변경
+//객체 크기 1X1X1, 이동 2씩, 맵크기 60(-30~30)
+//아직 이동 속도는 모두 동일함. 이거 따로 설정하는 방법은 이거 할 줄 아는 친구한테 배워올게염
 
 using namespace std;
 
@@ -46,7 +48,7 @@ GLuint vao[2], vbo[2], ebo;
 
 //육면체 위치 변수
 GLfloat CubePosX;
-GLfloat CubePosZ = 45.0f;
+GLfloat CubePosZ = 30.0f;
 
 //카메라 위치 변수
 GLfloat CamPosX = 2.0f;
@@ -66,6 +68,9 @@ bool checkA = false;
 bool checkS = false;
 bool checkD = false;
 
+//맵(1이 장애물이 있는 칸, 0은 없는 칸)
+int map[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
+
 GLfloat ground[][3] = {
 	-1, 0.0, -1,
 	1, 0.0, -1,
@@ -83,14 +88,14 @@ GLfloat ground_color[][3] = {
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
 
 GLfloat cube[][3] = {
-	-0.1, -0.1, -0.1,
-	0.1, -0.1, -0.1,
-	-0.1, 0.1, -0.1,
-	0.1, 0.1, -0.1,
-	-0.1, -0.1, 0.1,
-	0.1, -0.1, 0.1,
-	-0.1, 0.1, 0.1,
-	0.1, 0.1, 0.1,
+	-0.5, -0.5, -0.5,
+	0.5, -0.5, -0.5,
+	-0.5, 0.5, -0.5,
+	0.5, 0.5, -0.5,
+	-0.5, -0.5, 0.5,
+	0.5, -0.5, 0.5,
+	-0.5, 0.5, 0.5,
+	0.5, 0.5, 0.5,
 };
 
 GLfloat cube_color[][3] = {
@@ -118,25 +123,25 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'w':
-		CubePosZ -= 0.2f;
-		CamDirZ -= 0.2f;
-		CamPosZ -= 0.2f;
+		CubePosZ -= 2.f;
+		CamDirZ -= 2.f;
+		CamPosZ -= 2.f;
 		checkW = true;
 		checkA = false;
 		checkS = false;
 		checkD = false;
 		break;
 	case 'a':
-		CubePosX -= 0.2f;
+		CubePosX -= 2.f;
 		checkW = false;
 		checkA = true;
 		checkS = false;
 		checkD = false;
 		break;
 	case 's':
-		CubePosZ += 0.2f;
-		CamDirZ += 0.2f;
-		CamPosZ += 0.2f;
+		CubePosZ += 2.f;
+		CamDirZ += 2.f;
+		CamPosZ += 2.f;
 		cout << CubePosZ << endl;
 		checkW = false;
 		checkA = false;
@@ -144,7 +149,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		checkD = false;
 		break;
 	case 'd':
-		CubePosX += 0.2f;
+		CubePosX += 2.f;
 		checkW = false;
 		checkA = false;
 		checkS = false;
@@ -173,7 +178,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'Z':
 		CamPosZ -= 1.0f;
-		CamDirX -= 1.f;
+		CamDirZ -= 1.f;
 		break;
 	case 'q':
 		exit(0);
@@ -185,13 +190,11 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 float cnt = -10.f;	//도로의 끝인지, 체크하는 변수
 GLvoid TimeFunction(int value)
 {
-	
-
-	if (cnt >= 10.f){
+	if (cnt >= 10.f) {
 		cnt = -10.f;
 		Carmoving = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
-	else{
+	else {
 		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
 		cnt += 0.1;
 	}
@@ -224,7 +227,7 @@ GLvoid Projection()
 GLvoid Ground()
 {
 	//바닥 그리기=========================================================================================================================
-	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 50.0f));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 30.0f));
 
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Scale)); //--- modelTransform 변수에 변환 값 적용하기
@@ -235,8 +238,7 @@ GLvoid Ground()
 GLvoid Cube()
 {
 	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.2f, CubePosZ));
-	glm:: mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-	glm::mat4 Mat_Cube = Scale * Trans;
+	glm::mat4 Mat_Cube = Trans;
 
 	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
@@ -244,27 +246,35 @@ GLvoid Cube()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
+
 GLvoid Car()
 {
-	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, CubePosZ));
-	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(2.f, 1.5f, 2.f));
-	glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(4.f, 2.f, 2.f));
-	glm::mat4 BottomTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, -0.3, 0));
+	glm::mat4 Trans = glm::mat4(1.f);
+	for (int i = 0; i < 30; i++)
+	{
+		if (map[i] == 1)
+		{
+			glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 0.7f, 1.f));
+			glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(2.f, 1.f, 1.f));
+			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
+			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, 30 - 2 * i));
+
+			glm::mat4 Mat_Car = Carmoving * Trans * UpperTrans * Scale;
+			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			glBindVertexArray(vao[1]);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+			Mat_Car = Carmoving * Trans * BottomScale;
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			glBindVertexArray(vao[1]);
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		}
+	}
 
 
-	glm::mat4 Mat_Car = Carmoving * Trans * Scale;
-	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
-	glBindVertexArray(vao[1]);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-
-	Mat_Car = Carmoving * Trans * BottomTrans * BottomScale;
-	TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
-	glBindVertexArray(vao[1]);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
