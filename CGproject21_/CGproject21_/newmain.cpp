@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
+#include <random>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
@@ -61,6 +62,8 @@ GLfloat CamDirZ = CubePosZ - 7.0f;
 
 //자동차 움직임
 glm::mat4 Carmoving = glm::mat4(1.f);
+glm::mat4 Carmoving2 = glm::mat4(1.f);
+glm::mat4 Carmoving3 = glm::mat4(1.f);
 
 //wasd check
 bool checkW = false;
@@ -187,16 +190,30 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-float cnt = -10.f;	//도로의 끝인지, 체크하는 변수
+float cnt[3] = { -10.f };	//도로의 끝인지, 체크하는 변수
 GLvoid TimeFunction(int value)
 {
-	if (cnt >= 10.f) {
-		cnt = -10.f;
+
+	if (cnt[0] >= 10.f) {
+		cnt[0] = -10.f;
 		Carmoving = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
+	}
+	else if (cnt[1] >= 10.f) {
+		cnt[1] = -10.f;
+		Carmoving2 = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
+	}
+	else if (cnt[2] >= 10.f) {
+		cnt[2] = -10.f;
+		Carmoving3 = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
 	else {
 		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
-		cnt += 0.1;
+		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.2, 0, 0));
+		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.3, 0, 0));
+		cnt[0] += 0.1;
+		cnt[1] += 0.2;
+		cnt[2] += 0.3;
+
 	}
 	glutPostRedisplay();
 	glutTimerFunc(10, TimeFunction, 1);
@@ -249,6 +266,7 @@ GLvoid Cube()
 
 GLvoid Car()
 {
+	int mapcnt = 0;
 	glm::mat4 Trans = glm::mat4(1.f);
 	for (int i = 0; i < 30; i++)
 	{
@@ -257,19 +275,36 @@ GLvoid Car()
 			glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 0.7f, 1.f));
 			glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(2.f, 1.f, 1.f));
 			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
+			glm::mat4 Mat_Car = glm::mat4(1.f);
+			glm::mat4 Trans_Car = glm::mat4(1.f);
 			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, 30 - 2 * i));
-
-			glm::mat4 Mat_Car = Carmoving * Trans * UpperTrans * Scale;
+			switch (mapcnt)
+			{
+			case 1:
+			case 3:
+			case 4:
+				Mat_Car = Carmoving3 * Trans;
+				break;
+			case 2:
+			case 5:
+			case 6:
+				Mat_Car = Carmoving2 * Trans;
+				break;
+			default:
+				Mat_Car = Carmoving * Trans;
+			}
+			Trans_Car = Mat_Car * UpperTrans * Scale;
 			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[1]);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-			Mat_Car = Carmoving * Trans * BottomScale;
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			Trans_Car = Mat_Car * BottomScale;
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[1]);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+			mapcnt++;
 		}
 	}
 
