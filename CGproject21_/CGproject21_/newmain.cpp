@@ -19,7 +19,7 @@
 //아항 알게써!!
 //계산 쉽게 전체적인 단위 변경
 //객체 크기 1X1X1, 이동 2씩, 맵크기 60(-30~30)
-//아직 이동 속도는 모두 동일함. 이거 따로 설정하는 방법은 이거 할 줄 아는 친구한테 배워올게염
+//속도 수정 완료,,근데 뭔가 더 있어보이게 하고싶은데 이건 다 끝나고 여유로울 때 수정해야지
 
 using namespace std;
 
@@ -208,11 +208,11 @@ GLvoid TimeFunction(int value)
 	}
 	else {
 		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
-		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.2, 0, 0));
-		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.3, 0, 0));
+		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.15, 0, 0));
+		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.2, 0, 0));
 		cnt[0] += 0.1;
-		cnt[1] += 0.2;
-		cnt[2] += 0.3;
+		cnt[1] += 0.15;
+		cnt[2] += 0.2;
 
 	}
 	glutPostRedisplay();
@@ -280,14 +280,16 @@ GLvoid Car()
 			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, 30 - 2 * i));
 			switch (mapcnt)
 			{
-			case 1:
+			case 0:
 			case 3:
-			case 4:
+			case 5:
+			case 8:
 				Mat_Car = Carmoving3 * Trans;
 				break;
-			case 2:
-			case 5:
+			case 1:
+			case 4:
 			case 6:
+			case 9:
 				Mat_Car = Carmoving2 * Trans;
 				break;
 			default:
