@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp>
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp>
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp>
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -20,6 +20,9 @@
 //계산 쉽게 전체적인 단위 변경
 //객체 크기 1X1X1, 이동 2씩, 맵크기 60(-30~30)
 //속도 수정 완료,,근데 뭔가 더 있어보이게 하고싶은데 이건 다 끝나고 여유로울 때 수정해야지
+
+//충돌처리 어느정도 완료 근데 가끔 충돌 인식 안되는 오류 있음 수정 필요
+//충돌 후 큐브 사라지고 나서 r누르면 초기화
 
 using namespace std;
 
@@ -48,7 +51,7 @@ GLchar* filetobuf(const char* file);
 GLuint vao[2], vbo[2], ebo;
 
 //육면체 위치 변수
-GLfloat CubePosX;
+GLfloat CubePosX = 0.0f;
 GLfloat CubePosZ = 30.0f;
 
 //카메라 위치 변수
@@ -70,6 +73,9 @@ bool checkW = false;
 bool checkA = false;
 bool checkS = false;
 bool checkD = false;
+
+//충돌 bool값
+bool checkCrash = false;
 
 //맵(1이 장애물이 있는 칸, 0은 없는 칸)
 int map[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
@@ -98,7 +104,7 @@ BB getbb_cube(float centerx, float centerz)
 
 BB getbb_car(float centerx, float centerz)
 {
-	return BB(centerx - 1.0f, centerz - 0.5f, centerx + 1.0f, centerz + 0.5f);
+	return BB(centerx, centerz - 0.5f, centerx, centerz + 0.5f);
 }
 
 bool Collide(BB a, BB b)
@@ -224,6 +230,14 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CamPosZ -= 1.0f;
 		CamDirZ -= 1.f;
 		break;
+	case 'r':
+		checkCrash = false;
+		CubePosX = 0.0f;
+		CubePosZ = 30.0f;
+		CamPosX = 2.0f;
+		CamPosY = 3.0f;
+		CamPosZ = 50.0f;
+		break;
 	case 'q':
 		exit(0);
 		break;
@@ -232,6 +246,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 }
 
 float cnt[3] = { -10.f };	//도로의 끝인지, 체크하는 변수
+GLfloat CarPosZ;
 GLvoid TimeFunction(int value)
 {
 	if (cnt[0] >= 10.f) {
@@ -253,6 +268,10 @@ GLvoid TimeFunction(int value)
 		cnt[0] += 0.05;
 		cnt[1] += 0.08;
 		cnt[2] += 0.1;
+		for (int i = 0; i < 30; ++i)
+		{
+			CarPosZ = 30 - 2 * i;
+		}
 	}
 
 
@@ -312,9 +331,7 @@ GLvoid Car()
 	for (int i = 0; i < 30; i++)
 	{
 		//자동차 위치 변수
-		GLfloat CarPosX = -10.0f;
-		GLfloat CarPosZ = 30 - 2 * i;
-		GLfloat car = 30 - 2 * 0;
+		CarPosZ = 30 - 2 * i;
 		if (map[i] == 1)
 		{
 			glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 0.7f, 1.f));
@@ -322,7 +339,7 @@ GLvoid Car()
 			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
 			glm::mat4 Mat_Car = glm::mat4(1.f);
 			glm::mat4 Trans_Car = glm::mat4(1.f);
-			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CarPosX, 0.6f, CarPosZ));
+			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 0.6f, CarPosZ));
 			switch (mapcnt)
 			{
 			case 0:
@@ -351,10 +368,15 @@ GLvoid Car()
 			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[1]);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-			if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
+			if (checkCrash == false)
 			{
-				cout << "충돌" << endl;
+				if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
+				{
+					cout << "충돌" << endl;
+					checkCrash = true; //일단 충돌하면 큐브가 사라지게 해놨어! 이건 나중에 더 나은 방향으로 수정...
+				}
 			}
+
 			//계속 값이 변하는 변수를 넣어줘야 체크돼! 기존의 CarPosX같은 경우는 값을 변경해주지 않아서 체크가 되지 않았던 거였어
 			//참고로 translate변환의 경우 객체의 좌표값을 바꿔주지 않으니 참고 부탁...
 			mapcnt++;
@@ -373,7 +395,10 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Camera(); //카메라
 	Projection(); //투영
 	Ground(); //바닥 그리기
-	Cube(); //객체 그리기
+	if (checkCrash == false)
+	{
+		Cube(); //객체 그리기
+	}
 	Car();
 	//glFrontFace(GL_CCW);
 	glutPostRedisplay();
