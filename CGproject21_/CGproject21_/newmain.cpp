@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp>
-//#include <glm/glm/glm.hpp>
-//#include <glm/glm/ext.hpp>
-//#include <glm/glm/gtc/matrix_transform.hpp>
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp>
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -351,12 +351,12 @@ GLvoid Car()
 			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[1]);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-			if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(CarPosX, CarPosZ)) == true)
+			if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
 			{
 				cout << "충돌" << endl;
 			}
-
+			//계속 값이 변하는 변수를 넣어줘야 체크돼! 기존의 CarPosX같은 경우는 값을 변경해주지 않아서 체크가 되지 않았던 거였어
+			//참고로 translate변환의 경우 객체의 좌표값을 바꿔주지 않으니 참고 부탁...
 			mapcnt++;
 		}
 	}
