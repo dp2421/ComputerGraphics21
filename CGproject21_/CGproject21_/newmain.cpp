@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp>
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp>
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp>
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp>
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -74,6 +74,46 @@ bool checkD = false;
 //맵(1이 장애물이 있는 칸, 0은 없는 칸)
 int map[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
 
+struct BB {
+	float minx;
+	float minz;
+	float maxx;
+	float maxz;
+
+	BB() {}
+
+	BB(float minX, float minZ, float maxX, float maxZ)
+	{
+		this->minx = minX;
+		this->minz = minZ;
+		this->maxx = maxX;
+		this->maxz = maxZ;
+	}
+};
+
+BB getbb_cube(float centerx, float centerz)
+{
+	return BB(centerx - 0.5f, centerz - 0.5f, centerx + 0.5f, centerz + 0.5f);
+}
+
+BB getbb_car(float centerx, float centerz)
+{
+	return BB(centerx - 1.0f, centerz - 0.5f, centerx + 1.0f, centerz + 0.5f);
+}
+
+bool Collide(BB a, BB b)
+{
+	if (a.maxx <= b.minx)
+		return false;
+	if (a.minx >= b.maxx)
+		return false;
+	if (a.maxz <= b.minz)
+		return false;
+	if (a.minz >= b.maxz)
+		return false;
+	return true;
+}
+
 GLfloat ground[][3] = {
 	-1, 0.0, -1,
 	1, 0.0, -1,
@@ -129,6 +169,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CubePosZ -= 2.f;
 		CamDirZ -= 2.f;
 		CamPosZ -= 2.f;
+		cout << "cubeZ:" << CubePosZ << endl;
 		checkW = true;
 		checkA = false;
 		checkS = false;
@@ -145,7 +186,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CubePosZ += 2.f;
 		CamDirZ += 2.f;
 		CamPosZ += 2.f;
-		cout << CubePosZ << endl;
+		cout << "cubeZ:" << CubePosZ << endl;
 		checkW = false;
 		checkA = false;
 		checkS = true;
@@ -193,7 +234,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 float cnt[3] = { -10.f };	//도로의 끝인지, 체크하는 변수
 GLvoid TimeFunction(int value)
 {
-
 	if (cnt[0] >= 10.f) {
 		cnt[0] = -10.f;
 		Carmoving = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
@@ -207,14 +247,15 @@ GLvoid TimeFunction(int value)
 		Carmoving3 = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
 	else {
-		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
-		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.15, 0, 0));
-		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.2, 0, 0));
-		cnt[0] += 0.1;
-		cnt[1] += 0.15;
-		cnt[2] += 0.2;
-
+		Carmoving = glm::translate(Carmoving, glm::vec3(0.05, 0, 0));
+		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.08, 0, 0));
+		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.1, 0, 0));
+		cnt[0] += 0.05;
+		cnt[1] += 0.08;
+		cnt[2] += 0.1;
 	}
+
+
 	glutPostRedisplay();
 	glutTimerFunc(10, TimeFunction, 1);
 }
@@ -270,6 +311,10 @@ GLvoid Car()
 	glm::mat4 Trans = glm::mat4(1.f);
 	for (int i = 0; i < 30; i++)
 	{
+		//자동차 위치 변수
+		GLfloat CarPosX = -10.0f;
+		GLfloat CarPosZ = 30 - 2 * i;
+		GLfloat car = 30 - 2 * 0;
 		if (map[i] == 1)
 		{
 			glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 0.7f, 1.f));
@@ -277,7 +322,7 @@ GLvoid Car()
 			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
 			glm::mat4 Mat_Car = glm::mat4(1.f);
 			glm::mat4 Trans_Car = glm::mat4(1.f);
-			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10, 0.6f, 30 - 2 * i));
+			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CarPosX, 0.6f, CarPosZ));
 			switch (mapcnt)
 			{
 			case 0:
@@ -306,6 +351,12 @@ GLvoid Car()
 			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[1]);
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+			if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(CarPosX, CarPosZ)) == true)
+			{
+				cout << "충돌" << endl;
+			}
+
 			mapcnt++;
 		}
 	}
