@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp> //수현
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp> //예나
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp> //수현
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -47,7 +47,7 @@ GLchar errorLog[512];
 
 GLchar* filetobuf(const char* file);
 
-GLuint vao[2], vbo[2], ebo;
+GLuint vao[3], vbo[2], ebo;
 
 //육면체 위치 변수
 GLfloat CubePosX = 0.0f;
@@ -84,6 +84,28 @@ bool checkStage2 = false;
 //맵(1이 장애물이 있는 칸, 0은 없는 칸)
 int map1[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
 int map2[30] = { 0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,0,1,0,1,1,1,0,0,1,1,1,0,0,0 };
+
+
+//obj 관련 변수 
+int loadObj(const char* filename);
+int loadObj_normalize_center(const char* filename);	//불러오는 함수들 (밑에있음)
+float* sphere_object;
+int num_Triangle;
+const int num_vertices = 3;
+const int num_triangles = 1;
+std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
+std::vector< glm::vec3 > temp_vertices;
+std::vector< glm::vec2 > temp_uvs;
+std::vector< glm::vec3 > temp_normals;
+std::vector< glm::vec3 > outvertex, outnormal;
+std::vector< glm::vec2 > outuv;
+float sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+float aveX, aveY, aveZ;
+float scaleX, scaleY, scaleZ;
+float minX = 0.0, minY = 0.0, minZ = 0.0;
+float maxX = 0.0, maxY = 0.0, maxZ = 0.0;
+float scaleAll;
+
 
 struct BB {
 	float minx;
@@ -374,7 +396,7 @@ GLvoid Car1()
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			if (checkCrash1 == false)
 			{
-				cout << cnt[0] << endl;
+				//cout << cnt[0] << endl;
 
 				if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
 				{
@@ -536,6 +558,30 @@ GLvoid GroundInitBuffer()
 	glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
+GLvoid PlayerInitBuffer()
+{
+	num_Triangle = loadObj_normalize_center("sphere.obj");
+	//// 5.1. VAO 객체 생성 및 바인딩
+	glGenVertexArrays(3, &vao[2]);
+	glGenBuffers(3, &vbo[0]);
+	glGenBuffers(3, &vbo[1]);
+	//glGenBuffers(3, &vbo_color);
+
+	// 2 triangles for quad floor
+	//glUseProgram(IshaderID[0]);
+	glBindVertexArray(vao[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, outvertex.size() * sizeof(glm::vec3), &outvertex[0], GL_STATIC_DRAW);
+	GLint pAttribute = glGetAttribLocation(s_program, "vPos");
+	glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(pAttribute);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outnormal[0], GL_STATIC_DRAW);
+	GLint nAttribute = glGetAttribLocation(s_program, "vNormal");
+	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(nAttribute);
+}
 GLvoid CubeInitBuffer()
 {
 	glGenVertexArrays(1, &vao[1]);
@@ -671,4 +717,216 @@ GLchar* filetobuf(const char* file) {
 	buf[length] = 0;
 
 	return buf;
+}
+int loadObj(const char* filename)
+{
+	FILE* objFile;
+
+	fopen_s(&objFile, filename, "rb");
+
+	if (objFile == NULL) {
+		printf("Impossible to open the file !\n");
+		return false;
+	}
+	while (1) {
+
+		char lineHeader[128];
+		// read the first word of the line
+		int res = fscanf(objFile, "%s", lineHeader);
+		if (res == EOF)
+			break; // EOF = End Of File. Quit the loop.
+		if (strcmp(lineHeader, "v") == 0) {
+			glm::vec3 vertex;
+			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+
+			if (vertex.x < minX) minX = vertex.x;
+			if (vertex.y < minY) minY = vertex.y;
+			if (vertex.z < minZ) minZ = vertex.z;
+			if (vertex.x > maxX) maxX = vertex.x;
+			if (vertex.y > maxY) maxY = vertex.y;
+			if (vertex.z > maxZ) maxZ = vertex.z;
+			sumX += vertex.x;
+			sumY += vertex.y;
+			sumZ += vertex.z;
+
+			temp_vertices.push_back(vertex);
+		}
+		else if (strcmp(lineHeader, "vt") == 0) {
+			glm::vec2 uv;
+			fscanf(objFile, "%f %f\n", &uv.x, &uv.y);
+			temp_uvs.push_back(uv);
+		}
+		else if (strcmp(lineHeader, "vn") == 0) {
+			glm::vec3 normal;
+			fscanf(objFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+			temp_normals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "f") == 0) {
+			std::string vertex1, vertex2, vertex3;
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+			int matches = fscanf(objFile, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+				return false;
+			}
+			vertexIndices.push_back(vertexIndex[0]);
+			vertexIndices.push_back(vertexIndex[1]);
+			vertexIndices.push_back(vertexIndex[2]);
+			uvIndices.push_back(uvIndex[0]);
+			uvIndices.push_back(uvIndex[1]);
+			uvIndices.push_back(uvIndex[2]);
+			normalIndices.push_back(normalIndex[0]);
+			normalIndices.push_back(normalIndex[1]);
+			normalIndices.push_back(normalIndex[2]);
+		}
+	}
+
+	std::cout << "minX: " << minX << " minY: " << minY << " minZ: " << minZ << std::endl;
+	std::cout << "maxX: " << maxX << " maxY: " << maxY << " maxZ: " << maxZ << std::endl;
+
+	aveX = sumX / vertexIndices.size();
+	aveY = sumY / vertexIndices.size();
+	aveZ = sumZ / vertexIndices.size();
+	scaleX = (1.0 - maxX) * 10 + 1;
+	scaleY = (1.0 - maxY) * 10 + 1;
+	scaleZ = (1.0 - maxZ) * 10 + 1;
+
+	if (scaleX > scaleY) {
+		if (scaleY > scaleZ)
+			scaleAll = scaleZ;
+		else
+			scaleAll = scaleY;
+	}
+	else if (scaleX < scaleY) {
+		if (scaleX < scaleZ)
+			scaleAll = scaleX;
+		else
+			scaleAll = scaleZ;
+	}
+	std::cout << "aveX: " << aveX << " aveY: " << aveY << " aveZ: " << aveZ << std::endl;
+
+	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
+		unsigned int vertexIndex = vertexIndices[i];
+		glm::vec3 vertex = temp_vertices[vertexIndex - 1];
+		outvertex.push_back(vertex);
+	}
+	for (unsigned int i = 0; i < uvIndices.size(); i++) {
+		unsigned int uvIndex = uvIndices[i];
+		glm::vec2 vertex = temp_uvs[uvIndex - 1];
+		outuv.push_back(vertex);
+	}
+	for (unsigned int i = 0; i < normalIndices.size(); i++) {
+		unsigned int normalIndex = normalIndices[i];
+		glm::vec3 vertex = temp_normals[normalIndex - 1];
+		outnormal.push_back(vertex);
+	}
+
+	return outvertex.size();
+}
+int loadObj_normalize_center(const char* filename)
+{
+	FILE* objFile;
+
+	fopen_s(&objFile, filename, "rb");
+
+	if (objFile == NULL) {
+		printf("Impossible to open the file !\n");
+		return false;
+	}
+	while (1) {
+
+		char lineHeader[128];
+		// read the first word of the line
+		int res = fscanf(objFile, "%s", lineHeader);
+		if (res == EOF)
+			break; // EOF = End Of File. Quit the loop.
+		if (strcmp(lineHeader, "v") == 0) {
+			glm::vec3 vertex;
+			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+
+			if (vertex.x < minX) minX = vertex.x;
+			if (vertex.y < minY) minY = vertex.y;
+			if (vertex.z < minZ) minZ = vertex.z;
+			if (vertex.x > maxX) maxX = vertex.x;
+			if (vertex.y > maxY) maxY = vertex.y;
+			if (vertex.z > maxZ) maxZ = vertex.z;
+			sumX += vertex.x;
+			sumY += vertex.y;
+			sumZ += vertex.z;
+
+			temp_vertices.push_back(vertex);
+		}
+		else if (strcmp(lineHeader, "vt") == 0) {
+			glm::vec2 uv;
+			fscanf(objFile, "%f %f\n", &uv.x, &uv.y);
+			temp_uvs.push_back(uv);
+		}
+		else if (strcmp(lineHeader, "vn") == 0) {
+			glm::vec3 normal;
+			fscanf(objFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+			temp_normals.push_back(normal);
+		}
+		else if (strcmp(lineHeader, "f") == 0) {
+			std::string vertex1, vertex2, vertex3;
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+			int matches = fscanf(objFile, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+				return false;
+			}
+			vertexIndices.push_back(vertexIndex[0]);
+			vertexIndices.push_back(vertexIndex[1]);
+			vertexIndices.push_back(vertexIndex[2]);
+			uvIndices.push_back(uvIndex[0]);
+			uvIndices.push_back(uvIndex[1]);
+			uvIndices.push_back(uvIndex[2]);
+			normalIndices.push_back(normalIndex[0]);
+			normalIndices.push_back(normalIndex[1]);
+			normalIndices.push_back(normalIndex[2]);
+		}
+	}
+
+	std::cout << "minX: " << minX << " minY: " << minY << " minZ: " << minZ << std::endl;
+	std::cout << "maxX: " << maxX << " maxY: " << maxY << " maxZ: " << maxZ << std::endl;
+
+	aveX = sumX / vertexIndices.size();
+	aveY = sumY / vertexIndices.size();
+	aveZ = sumZ / vertexIndices.size();
+	scaleX = maxX - minX;
+	scaleY = maxY - minY;
+	scaleZ = maxZ - minZ;
+
+	glm::vec3 temp;
+
+	std::cout << "aveX: " << aveX << " aveY: " << aveY << " aveZ: " << aveZ << std::endl;
+
+	std::cout << "scaleX: " << scaleX << " scaleY: " << scaleY << " scaleZ: " << scaleZ << std::endl;
+
+	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
+		unsigned int vertexIndex = vertexIndices[i];
+		temp = temp_vertices[vertexIndex - 1];
+		temp.x = temp.x - minX;
+		temp.y = temp.y - minY;
+		temp.z = temp.z - minZ;
+
+		temp.x = ((temp.x * 2.0f) / scaleX) - 1.0f;
+		temp.y = ((temp.y * 2.0f) / scaleY) - 1.0f;
+		temp.z = ((temp.z * 2.0f) / scaleZ) - 1.0f;
+
+		outvertex.push_back(temp);
+		//glm::vec3 vertex = temp_vertices[vertexIndex - 1];
+		//outvertex.push_back(vertex);
+	}
+	for (unsigned int i = 0; i < uvIndices.size(); i++) {
+		unsigned int uvIndex = uvIndices[i];
+		glm::vec2 vertex = temp_uvs[uvIndex - 1];
+		outuv.push_back(vertex);
+	}
+	for (unsigned int i = 0; i < normalIndices.size(); i++) {
+		unsigned int normalIndex = normalIndices[i];
+		glm::vec3 vertex = temp_normals[normalIndex - 1];
+		outnormal.push_back(vertex);
+	}
+
+	return outvertex.size();
 }
