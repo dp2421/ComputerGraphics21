@@ -16,12 +16,9 @@
 
 
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
-//아항 알게써!!
-//계산 쉽게 전체적인 단위 변경
-//객체 크기 1X1X1, 이동 2씩, 맵크기 60(-30~30)
-//속도 수정 완료,,근데 뭔가 더 있어보이게 하고싶은데 이건 다 끝나고 여유로울 때 수정해야지
 
-//충돌 후 큐브 사라지고 나서 r누르면 초기화
+//쉐이더 수정하면서 컬러값을 좌표가 아니라 밑에 드로우에서 glUniform3f(Color_1, 0.690196, 0.768627, 0.870588); 이렇게 받아오는걸로 수정
+//조명이 저모양으로나오는는거 수정해야함...왜저러지 흑흑
 
 using namespace std;
 
@@ -156,12 +153,12 @@ GLfloat ground[][3] = {
 	1, 0.0, 1,
 };
 
-GLfloat ground_color[][3] = {
-	0.690196, 0.768627, 0.870588,
-	0.690196, 0.768627, 0.870588,
-	0.690196, 0.768627, 0.870588,
-	0.690196, 0.768627, 0.870588,
-};
+//GLfloat ground_color[][3] = {
+//	0.690196, 0.768627, 0.870588,
+//	0.690196, 0.768627, 0.870588,
+//	0.690196, 0.768627, 0.870588,
+//	0.690196, 0.768627, 0.870588,
+//};
 
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
 
@@ -176,16 +173,16 @@ GLfloat cube[][3] = {
 	0.5, 0.5, 0.5,
 };
 
-GLfloat cube_color[][3] = {
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-	1, 0.713725, 0.756863,
-};
+//GLfloat cube_color[][3] = {
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//	1, 0.713725, 0.756863,
+//};
 
 GLuint cubelement[36] = {
 	2, 0, 1, 2, 1, 3,
@@ -486,9 +483,8 @@ GLvoid Light()
 {
 	int lightColorLocation = glGetUniformLocation(s_program, "lightColor");
 	int lightPosLocation = glGetUniformLocation(s_program, "lightPos");
-	glUniform3f(Color_1, 0.2, 1.0, 0.3);
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
-	glUniform3f(lightPosLocation, 0, 10, 0);
+	glUniform3f(lightPosLocation, CubePosX, 20, CubePosZ);
 }
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
@@ -559,9 +555,7 @@ GLvoid GroundInitBuffer()
 
 	glGenBuffers(1, &vbo[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_color), ground_color, GL_STATIC_DRAW);
-
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
 	glEnableVertexAttribArray(1);
 
@@ -569,16 +563,16 @@ GLvoid GroundInitBuffer()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
+	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
 GLvoid PlayerInitBuffer()
 {
-	num_Triangle = loadObj_normalize_center("rect.obj");
+	num_Triangle = loadObj_normalize_center("child.obj");
 	//// 5.1. VAO 객체 생성 및 바인딩
-	glGenVertexArrays(3, &vao[2]);
-	glGenBuffers(3, &vbo[0]);
-	glGenBuffers(3, &vbo[1]);
+	glGenVertexArrays(2, &vao[2]);
+	glGenBuffers(2, &vbo[0]);
+	glGenBuffers(2, &vbo[1]);
 
 	glBindVertexArray(vao[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -606,8 +600,7 @@ GLvoid CubeInitBuffer()
 
 	glGenBuffers(1, &vbo[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
 	glEnableVertexAttribArray(1);
