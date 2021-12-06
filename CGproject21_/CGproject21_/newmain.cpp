@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp> //수현
-//#include <glm/glm/glm.hpp>
-//#include <glm/glm/ext.hpp>
-//#include <glm/glm/gtc/matrix_transform.hpp> //예나
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp> //수현
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -29,11 +29,13 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
 GLvoid CubeInitBuffer();
 GLvoid GroundInitBuffer();
+GLvoid PlayerInitBuffer();
 //GLvoid InitShader();
 
 void make_vertexShaders();
 void make_fragmentShaders();
 void make_shaderProgram();
+unsigned int Color_1;
 GLchar* vertexsource, * fragmentsource;
 GLuint vertexShader, fragmentShader;
 GLuint shaderID;
@@ -329,6 +331,7 @@ GLvoid Projection()
 
 GLvoid Ground()
 {
+	glUniform3f(Color_1, 0.690196, 0.768627, 0.870588);
 	//바닥 그리기=========================================================================================================================
 	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 30.0f));
 
@@ -340,18 +343,21 @@ GLvoid Ground()
 
 GLvoid Cube()
 {
+	glUniform3f(Color_1, 1, 0.713725, 0.756863);
+	glm::mat4 Scale = glm::scale(glm::mat4(1.f), glm::vec3(4, 4, 4));
 	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.2f, CubePosZ));
 	glm::mat4 Mat_Cube = Trans;
 
 	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
-	glBindVertexArray(vao[1]);
+	glBindVertexArray(vao[2]);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, num_Triangle);
 }
 
 GLvoid Car1()
 {
+	glUniform3f(Color_1, 1, 0.713725, 0.756863);
 	int mapcnt = 0;
 	glm::mat4 Trans = glm::mat4(1.f);
 	for (int i = 0; i < 30; i++)
@@ -476,13 +482,20 @@ GLvoid Car2()
 		}
 	}
 }
-
+GLvoid Light()
+{
+	int lightColorLocation = glGetUniformLocation(s_program, "lightColor");
+	int lightPosLocation = glGetUniformLocation(s_program, "lightPos");
+	glUniform3f(Color_1, 0.2, 1.0, 0.3);
+	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+	glUniform3f(lightPosLocation, 0, 10, 0);
+}
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(s_program);
-
+	Light();
 	Camera(); //카메라
 	Projection(); //투영
 	Ground(); //바닥 그리기
@@ -522,13 +535,14 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	make_shaderProgram();
 	CubeInitBuffer();
 	GroundInitBuffer();
+	PlayerInitBuffer();
+	Color_1 = glGetUniformLocation(s_program, "in_Color");
 	glEnable(GL_DEPTH_TEST);
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutTimerFunc(10, TimeFunction, 1);
-
 	glutMainLoop();
 }
 
@@ -560,15 +574,12 @@ GLvoid GroundInitBuffer()
 
 GLvoid PlayerInitBuffer()
 {
-	num_Triangle = loadObj_normalize_center("sphere.obj");
+	num_Triangle = loadObj_normalize_center("rect.obj");
 	//// 5.1. VAO 객체 생성 및 바인딩
 	glGenVertexArrays(3, &vao[2]);
 	glGenBuffers(3, &vbo[0]);
 	glGenBuffers(3, &vbo[1]);
-	//glGenBuffers(3, &vbo_color);
 
-	// 2 triangles for quad floor
-	//glUseProgram(IshaderID[0]);
 	glBindVertexArray(vao[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, outvertex.size() * sizeof(glm::vec3), &outvertex[0], GL_STATIC_DRAW);
@@ -633,7 +644,7 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 void make_vertexShaders()
 {
-	vertexsource = filetobuf("vertex.glsl");
+	vertexsource = filetobuf("lightvertex.glsl");
 
 	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -658,7 +669,7 @@ void make_vertexShaders()
 
 void make_fragmentShaders()
 {
-	fragmentsource = filetobuf("fragment.glsl");
+	fragmentsource = filetobuf("mirrorfragment.glsl");
 	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//--- 세이더 코드를 세이더 객체에 넣기
