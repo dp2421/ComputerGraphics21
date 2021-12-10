@@ -4,12 +4,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp> //수현
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp> //예나
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp> //수현
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -19,6 +19,9 @@
 
 //쉐이더 수정하면서 컬러값을 좌표가 아니라 밑에 드로우에서 glUniform3f(Color_1, 0.690196, 0.768627, 0.870588); 이렇게 받아오는걸로 수정
 //조명이 저모양으로나오는는거 수정해야함...왜저러지 흑흑
+//충돌함수같은것들 이름 전부 cube->player 수정, player 사이즈, 방향 수정, 스테이지 1, 2 색상 다르게 수정
+//충돌하면 해당 스테이지 시작점으로 이동, 스테이지 2 카메라 조금만 더 손보면 좋을 듯?
+//그리고 스테이지 1에서 끝까지 가면 플레이어가 뒤돌고 스테이지 2 바로 시작!
 
 using namespace std;
 
@@ -123,7 +126,7 @@ struct BB {
 	}
 };
 
-BB getbb_cube(float centerx, float centerz)
+BB getbb_player(float centerx, float centerz)
 {
 	return BB(centerx - 0.5f, centerz, centerx + 0.5f, centerz);
 }
@@ -153,12 +156,6 @@ GLfloat ground[][3] = {
 	1, 0.0, 1,
 };
 
-//GLfloat ground_color[][3] = {
-//	0.690196, 0.768627, 0.870588,
-//	0.690196, 0.768627, 0.870588,
-//	0.690196, 0.768627, 0.870588,
-//	0.690196, 0.768627, 0.870588,
-//};
 
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
 
@@ -173,16 +170,6 @@ GLfloat cube[][3] = {
 	0.5, 0.5, 0.5,
 };
 
-//GLfloat cube_color[][3] = {
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//	1, 0.713725, 0.756863,
-//};
 
 GLuint cubelement[36] = {
 	2, 0, 1, 2, 1, 3,
@@ -338,12 +325,17 @@ GLvoid Ground()
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-GLvoid Cube()
+GLvoid Player()
 {
 	glUniform3f(Color_1, 1, 0.713725, 0.756863);
-	glm::mat4 Scale = glm::scale(glm::mat4(1.f), glm::vec3(4, 4, 4));
-	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.2f, CubePosZ));
-	glm::mat4 Mat_Cube = Trans;
+	glm::mat4 Rot;
+	if (checkStage2 == true)
+		Rot = glm::rotate(glm::mat4(1.f), glm::radians(0.f), glm::vec3(0, 1, 0));
+	else
+		Rot = glm::rotate(glm::mat4(1.f), glm::radians(180.f), glm::vec3(0, 1, 0));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.f), glm::vec3(0.7, 0.7, 0.7));
+	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.7f, CubePosZ));
+	glm::mat4 Mat_Cube = Trans *Rot* Scale;
 
 	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
@@ -401,21 +393,25 @@ GLvoid Car1()
 			{
 				//cout << cnt[0] << endl;
 
-				if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
+				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
 				{
-					checkCrash1 = true; //일단 충돌하면 큐브가 사라지게 해놨어! 이건 나중에 더 나은 방향으로 수정...
-					checkStage1 = false; //충돌 시 스테이지1 자동차 사라짐
 					CubePosX = 0.0f;
 					CubePosZ = 30.0f;
-					checkStage2 = true; //스테이지2 시작
 					CamPosX = 2.0f;
 					CamPosY = 5.0f;
 					CamPosZ = 50.0f;
 				}
 			}
 
-			//계속 값이 변하는 변수를 넣어줘야 체크돼! 기존의 CarPosX같은 경우는 값을 변경해주지 않아서 체크가 되지 않았던 거였어
-			//참고로 translate변환의 경우 객체의 좌표값을 바꿔주지 않으니 참고 부탁...
+			if (CubePosZ < -30.f)
+			{
+				checkStage2 = true; //스테이지2 시작
+				checkStage1 = false; //충돌 시 스테이지1 자동차 사라짐
+				CamPosX = 2.0f;
+				CamPosY = 5.0f;
+				CamPosZ = -5.f;
+				CamDirZ = CubePosZ;	//카메라 조정(반대편)
+			}
 			mapcnt++;
 		}
 	}
@@ -423,6 +419,7 @@ GLvoid Car1()
 
 GLvoid Car2()
 {
+	glUniform3f(Color_1, 0.713725, 1, 0.756863);
 	int mapcnt = 0;
 	glm::mat4 Trans = glm::mat4(1.f);
 	for (int i = 0; i < 30; i++)
@@ -467,14 +464,16 @@ GLvoid Car2()
 			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 			if (checkCrash2 == false)
 			{
-				if (Collide(getbb_cube(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
+				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
 				{
-					checkCrash2 = true; //스테이지2의 큐브 사라짐
+					CubePosX = 0.0f;
+					CubePosZ = -30.0f;
+					CamPosX = 2.0f;
+					CamPosY = 5.0f;
+					CamPosZ = -5.f;
+					CamDirZ = CubePosZ;	//카메라 조정(반대편)
 				}
 			}
-
-			//계속 값이 변하는 변수를 넣어줘야 체크돼! 기존의 CarPosX같은 경우는 값을 변경해주지 않아서 체크가 되지 않았던 거였어
-			//참고로 translate변환의 경우 객체의 좌표값을 바꿔주지 않으니 참고 부탁...
 			mapcnt++;
 		}
 	}
@@ -499,7 +498,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	{
 		if (checkCrash1 == false)
 		{
-			Cube(); //객체 그리기
+			Player(); //객체 그리기
 		}
 		Car1();
 	}
@@ -507,7 +506,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	{
 		if (checkCrash2 == false)
 		{
-			Cube();
+			Player();
 		}
 		Car2();
 	}
@@ -611,24 +610,6 @@ GLvoid CubeInitBuffer()
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
-
-//GLvoid InitShader()
-//{
-//	make_vertexShaders(); //--- 버텍스 세이더 만들기
-//	make_fragmentShaders(); //--- 프래그먼트 세이더 만들기
-//	//-- shader Program
-//	s_program = glCreateProgram();
-//
-//	glAttachShader(s_program, vertexShader);
-//	glAttachShader(s_program, fragmentShader);
-//	glLinkProgram(s_program);
-//	
-//	//--- 세이더 삭제하기
-//	glDeleteShader(vertexShader);
-//	glDeleteShader(fragmentShader);
-//	//--- Shader Program 사용하기
-//	glUseProgram(s_program);
-//}
 
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {
