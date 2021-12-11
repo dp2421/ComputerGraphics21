@@ -622,6 +622,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	CarInitBuffer();
 	Color_1 = glGetUniformLocation(s_program, "in_Color");
 	glEnable(GL_DEPTH_TEST);
+
+	glGenBuffers(3, vbo);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 
