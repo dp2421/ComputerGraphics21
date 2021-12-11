@@ -1,29 +1,27 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <iostream>
 #include <random>
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp> //수현
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp> //예나
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp> //수현
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
 
-
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
 
-//쉐이더 수정하면서 컬러값을 좌표가 아니라 밑에 드로우에서 glUniform3f(Color_1, 0.690196, 0.768627, 0.870588); 이렇게 받아오는걸로 수정
-//조명이 저모양으로나오는는거 수정해야함...왜저러지 흑흑
-//충돌함수같은것들 이름 전부 cube->player 수정, player 사이즈, 방향 수정, 스테이지 1, 2 색상 다르게 수정
-//충돌하면 해당 스테이지 시작점으로 이동, 스테이지 2 카메라 조금만 더 손보면 좋을 듯?
-//그리고 스테이지 1에서 끝까지 가면 플레이어가 뒤돌고 스테이지 2 바로 시작!
+//뭐지 stage1 바꾼 이미지 넣어줬는데 터지네.....일단 stage2로 설정해뒀어여 참고부탁..
 
 using namespace std;
+unsigned int texture[1];
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
@@ -31,6 +29,7 @@ GLvoid CubeInitBuffer();
 GLvoid GroundInitBuffer();
 GLvoid PlayerInitBuffer();
 GLvoid CarInitBuffer();
+GLvoid InitTexture();
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -49,7 +48,7 @@ GLchar errorLog[512];
 
 GLchar* filetobuf(const char* file);
 
-GLuint vao[4], vbo[2], ebo;
+GLuint vao[4], vbo[3], ebo;
 
 //육면체 위치 변수
 GLfloat CubePosX = 0.0f;
@@ -186,6 +185,12 @@ GLfloat cube[][3] = {
 	0.5, 0.5, 0.5,
 };
 
+GLfloat ground_Texture[] = {
+	0, 0.0, 0,
+	1, 0.0, 0,
+	0, 0.0, 1,
+	1, 0.0, 1,
+};
 
 GLuint cubelement[36] = {
 	2, 0, 1, 2, 1, 3,
@@ -334,10 +339,14 @@ GLvoid Ground()
 	glUniform3f(Color_1, 0.690196, 0.768627, 0.870588);
 	//바닥 그리기=========================================================================================================================
 	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 30.0f));
-
+	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
+	glUniform1i(TextureLocation, 0);
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Scale)); //--- modelTransform 변수에 변환 값 적용하기
 	glBindVertexArray(vao[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -408,6 +417,7 @@ GLvoid Car1()
 
 				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
 				{
+					cout << "collide!!";
 					CubePosX = 0.0f;
 					CubePosZ = 30.0f;
 					CamPosX = 2.0f;
@@ -498,6 +508,67 @@ GLvoid Light()
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
 	glUniform3f(lightPosLocation, CubePosX, 20, CubePosZ);
 }
+
+GLvoid InitTexture()
+{
+	BITMAP* bmp;
+
+	int width, height, nrChannels;
+
+	glGenTextures(1, &texture[0]); //--- 텍스처 생성
+
+	glBindTexture(GL_TEXTURE_2D, texture[0]); //--- 텍스처 바인딩
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	stbi_set_flip_vertically_on_load(true);
+
+	unsigned char* data = stbi_load("stage1.png", &width, &height, &nrChannels, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //---텍스처 이미지 정의
+	glGenerateMipmap(GL_TEXTURE_2D);
+	stbi_image_free(data);
+}
+
+GLvoid GroundInitBuffer()
+{
+	glGenVertexArrays(1, &vao[0]);
+	glBindVertexArray(vao[0]);
+
+	glGenBuffers(1, &vbo[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &vbo[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &vbo[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_Texture), ground_Texture, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+	glEnableVertexAttribArray(2);
+
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
+}
+
+GLvoid GroundTexture()
+{
+	Ground();
+	glBindVertexArray(vao[0]); //--- 첫 번째 폴리곤
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -541,42 +612,24 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glewExperimental = GL_TRUE;
 	glewInit();
 	make_shaderProgram();
+	InitTexture();
 	CubeInitBuffer();
 	GroundInitBuffer();
 	PlayerInitBuffer();
 	CarInitBuffer();
+
 	Color_1 = glGetUniformLocation(s_program, "in_Color");
 	glEnable(GL_DEPTH_TEST);
+
+	glGenBuffers(3, vbo);
+	glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, texture[0]);
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutTimerFunc(10, TimeFunction, 1);
 	glutMainLoop();
-}
-
-GLvoid GroundInitBuffer()
-{
-	glGenVertexArrays(1, &vao[0]);
-	glBindVertexArray(vao[0]);
-
-	glGenBuffers(1, &vbo[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &vbo[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
-	glEnableVertexAttribArray(1);
-
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
 GLvoid PlayerInitBuffer()
