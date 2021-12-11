@@ -18,11 +18,7 @@
 
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
 
-//쉐이더 수정하면서 컬러값을 좌표가 아니라 밑에 드로우에서 glUniform3f(Color_1, 0.690196, 0.768627, 0.870588); 이렇게 받아오는걸로 수정
-//조명이 저모양으로나오는는거 수정해야함...왜저러지 흑흑
-//충돌함수같은것들 이름 전부 cube->player 수정, player 사이즈, 방향 수정, 스테이지 1, 2 색상 다르게 수정
-//충돌하면 해당 스테이지 시작점으로 이동, 스테이지 2 카메라 조금만 더 손보면 좋을 듯?
-//그리고 스테이지 1에서 끝까지 가면 플레이어가 뒤돌고 스테이지 2 바로 시작!
+//뭐지 stage1 바꾼 이미지 넣어줬는데 터지네.....일단 stage2로 설정해뒀어여 참고부탁..
 
 using namespace std;
 unsigned int texture[1];
@@ -189,14 +185,20 @@ GLfloat cube[][3] = {
 	0.5, 0.5, 0.5,
 };
 
-GLfloat ground_Texture[][6] = {
-	{0.0, 1.0,
-	0.0, 0.0,
-	1.0, 1.0},
-	{1.0, 1.0,
-	0.0, 0.0,
-	1.0, 0.0},
+GLfloat ground_Texture[] = {
+	0, 0.0, 0,
+	1, 0.0, 0,
+	0, 0.0, 1,
+	1, 0.0, 1,
 };
+//GLfloat ground_Texture[][6] = {
+//	{0.0, 1.0,
+//	0.0, 0.0,
+//	1.0, 1.0},
+//	{1.0, 1.0,
+//	0.0, 0.0,
+//	1.0, 0.0},
+//};
 
 GLuint cubelement[36] = {
 	2, 0, 1, 2, 1, 3,
@@ -345,10 +347,14 @@ GLvoid Ground()
 	glUniform3f(Color_1, 0.690196, 0.768627, 0.870588);
 	//바닥 그리기=========================================================================================================================
 	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 30.0f));
-
+	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
+	glUniform1i(TextureLocation, 0);
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Scale)); //--- modelTransform 변수에 변환 값 적용하기
 	glBindVertexArray(vao[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -526,12 +532,12 @@ GLvoid InitTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	stbi_set_flip_vertically_on_load(true);
 
-	unsigned char* data = stbi_load("stage1.png", &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load("stage2.png", &width, &height, &nrChannels, 0);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //---텍스처 이미지 정의
-
-	glUseProgram(shaderID);
-	int tLocation = glGetUniformLocation(s_program, "outTexture"); //--- outTexture 유니폼 샘플러의 위치를 가져옴
-	glUniform1i(tLocation, 0); //--- 샘플러를 0번 유닛으로 설정
+	glGenerateMipmap(GL_TEXTURE_2D);
+	//glUseProgram(s_program);
+	//int tLocation = glGetUniformLocation(s_program, "outTexture"); //--- outTexture 유니폼 샘플러의 위치를 가져옴
+	//glUniform1i(tLocation, 0); //--- 샘플러를 0번 유닛으로 설정
 	stbi_image_free(data);
 }
 
@@ -555,7 +561,7 @@ GLvoid GroundInitBuffer()
 	glGenBuffers(1, &vbo[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_Texture), ground_Texture, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
 	glEnableVertexAttribArray(2);
 
 	glGenBuffers(1, &ebo);
@@ -617,16 +623,18 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glewExperimental = GL_TRUE;
 	glewInit();
 	make_shaderProgram();
+	InitTexture();
 	CubeInitBuffer();
 	GroundInitBuffer();
 	PlayerInitBuffer();
 	CarInitBuffer();
+
 	Color_1 = glGetUniformLocation(s_program, "in_Color");
 	glEnable(GL_DEPTH_TEST);
 
 	glGenBuffers(3, vbo);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	//glBindTexture(GL_TEXTURE_2D, texture[0]);
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
