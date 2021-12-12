@@ -6,22 +6,22 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp> //수현
-//#include <glm/glm/glm.hpp>
-//#include <glm/glm/ext.hpp>
-//#include <glm/glm/gtc/matrix_transform.hpp> //예나
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp> //수현
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
 
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
 
-//뭐지 stage1 바꾼 이미지 넣어줬는데 터지네.....일단 stage2로 설정해뒀어여 참고부탁..
+//stage1, stage2, player, car1, car2, ground 텍스처 완!
 
 using namespace std;
-unsigned int texture[1];
+unsigned int texture[5];
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
@@ -171,8 +171,15 @@ GLfloat ground[][3] = {
 	1, 0.0, 1,
 };
 
+GLfloat ground2[][3] = {
+	-1, 0.0, -1,
+	1, 0.0, -1,
+	-1, 0.0, 1,
+	1, 0.0, 1,
+};
 
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
+GLuint ground_element2[] = { 2, 0, 1, 2, 1, 3, };
 
 GLfloat cube[][3] = {
 	-0.5, -0.5, -0.5,
@@ -186,6 +193,13 @@ GLfloat cube[][3] = {
 };
 
 GLfloat ground_Texture[] = {
+	0, 0.0, 0,
+	1, 0.0, 0,
+	0, 0.0, 1,
+	1, 0.0, 1,
+};
+
+GLfloat ground_Texture2[] = {
 	0, 0.0, 0,
 	1, 0.0, 0,
 	0, 0.0, 1,
@@ -338,15 +352,39 @@ GLvoid Ground()
 {
 	glUniform3f(Color_1, 0.690196, 0.768627, 0.870588);
 	//바닥 그리기=========================================================================================================================
-	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 30.0f));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 2.0f, 10.0f));
+	glm::mat4 Rotate = glm::mat4(1.0f);
+	Rotate = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 SR = glm::mat4(1.0f);
+	SR = Rotate * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Scale)); //--- modelTransform 변수에 변환 값 적용하기
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
 	glBindVertexArray(vao[0]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+GLvoid Ground2()
+{
+	glUniform3f(Color_1, 0.690196, 0.768627, 0.870588);
+	//바닥 그리기=========================================================================================================================
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 2.0f, 10.0f));
+	glm::mat4 Rotate = glm::mat4(1.0f);
+	Rotate = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 SR = glm::mat4(1.0f);
+	SR = Rotate * Scale;
+	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
+	glUniform1i(TextureLocation, 0);
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	glBindVertexArray(vao[0]);
+	glActiveTexture(GL_TEXTURE0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -365,7 +403,9 @@ GLvoid Player()
 	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
 	glBindVertexArray(vao[2]);
+	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glBindTexture(GL_TEXTURE_2D, texture[2]);
 	glDrawArrays(GL_TRIANGLES, 0, num_Triangle);
 }
 
@@ -408,7 +448,9 @@ GLvoid Car1()
 			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[3]);
+			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBindTexture(GL_TEXTURE_2D, texture[3]);
 			glDrawArrays(GL_TRIANGLES, 0, num_Triangle1);
 
 			if (checkCrash1 == false)
@@ -478,7 +520,9 @@ GLvoid Car2()
 			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
 			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[3]);
+			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glBindTexture(GL_TEXTURE_2D, texture[4]);
 			glDrawArrays(GL_TRIANGLES, 0, num_Triangle1);
 
 			//Trans_Car = Mat_Car * BottomScale;
@@ -513,21 +557,44 @@ GLvoid InitTexture()
 {
 	BITMAP* bmp;
 
-	int width, height, nrChannels;
-
-	glGenTextures(1, &texture[0]); //--- 텍스처 생성
-
-	glBindTexture(GL_TEXTURE_2D, texture[0]); //--- 텍스처 바인딩
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	int width[5], height[5], nrChannels[5];
+	unsigned char* data[5];
 	stbi_set_flip_vertically_on_load(true);
 
-	unsigned char* data = stbi_load("stage1.png", &width, &height, &nrChannels, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //---텍스처 이미지 정의
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(data);
+	glGenTextures(5, texture); //--- 텍스처 생성
+
+	for (int i = 0; i < 5; i++)
+	{
+		//--- texture 1
+		glBindTexture(GL_TEXTURE_2D, texture[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		switch (i)
+		{
+		case 0:
+			data[i] = stbi_load("stage1.png", &width[i], &height[i], &nrChannels[i], 0);
+			break;
+		case 1:
+			data[i] = stbi_load("stage2.png", &width[i], &height[i], &nrChannels[i], 0);
+			break;
+		case 2:
+			data[i] = stbi_load("yellow1.jpg", &width[i], &height[i], &nrChannels[i], 0);
+			break;
+		case 3:
+			data[i] = stbi_load("blue.jpg", &width[i], &height[i], &nrChannels[i], 0);
+			break;
+		case 4:
+			data[i] = stbi_load("green.jpg", &width[i], &height[i], &nrChannels[i], 0);
+			break;
+		}
+
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, width[i], height[i], 0, GL_RGB, GL_UNSIGNED_BYTE, data[i]); //---텍스처 이미지 정의
+		glGenerateMipmap(GL_TEXTURE_2D);
+		stbi_image_free(data[i]);
+	}
 }
 
 GLvoid GroundInitBuffer()
@@ -560,14 +627,50 @@ GLvoid GroundInitBuffer()
 	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
-GLvoid GroundTexture()
+GLvoid GroundInitBuffer2()
 {
-	Ground();
-	glBindVertexArray(vao[0]); //--- 첫 번째 폴리곤
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glGenVertexArrays(1, &vao[1]);
+	glBindVertexArray(vao[1]);
+
+	glGenBuffers(1, &vbo[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground2), ground2, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &vbo[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground2), ground2, GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
+	glEnableVertexAttribArray(1);
+
+	glGenBuffers(1, &vbo[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_Texture2), ground_Texture2, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+	glEnableVertexAttribArray(2);
+
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element2), ground_element2, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
+
+//GLvoid GroundTexture()
+//{
+//	Ground();
+//	glBindVertexArray(vao[0]); //--- 첫 번째 폴리곤
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, texture[0]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+//	glDrawArrays(GL_TRIANGLES, 0, 6);
+//
+//	Ground2();
+//	glBindVertexArray(vao[1]); //--- 첫 번째 폴리곤
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, texture[1]); //--- texture[0]을 사용하여 폴리곤을 그린다.
+//	glDrawArrays(GL_TRIANGLES, 0, 6);
+//}
 
 void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 {
@@ -577,13 +680,13 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Light();
 	Camera(); //카메라
 	Projection(); //투영
-	Ground(); //바닥 그리기
 	if (checkStage1)
 	{
 		if (checkCrash1 == false)
 		{
 			Player(); //객체 그리기
 		}
+		Ground();
 		Car1();
 	}
 	if (checkStage2)
@@ -592,6 +695,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 		{
 			Player();
 		}
+		Ground2();
 		Car2();
 	}
 	//glFrontFace(GL_CCW);
@@ -615,6 +719,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	InitTexture();
 	CubeInitBuffer();
 	GroundInitBuffer();
+	GroundInitBuffer2();
 	PlayerInitBuffer();
 	CarInitBuffer();
 
@@ -639,6 +744,7 @@ GLvoid PlayerInitBuffer()
 	glGenVertexArrays(2, &vao[2]);
 	glGenBuffers(2, &vbo[0]);
 	glGenBuffers(2, &vbo[1]);
+	glGenBuffers(2, &vbo[2]);
 
 	glBindVertexArray(vao[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -652,6 +758,16 @@ GLvoid PlayerInitBuffer()
 	GLint nAttribute = glGetAttribLocation(s_program, "vNormal");
 	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(nAttribute);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outuv[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(2);
+
+	/*glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_Texture), ground_Texture, GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
+	glEnableVertexAttribArray(2);*/
 }
 GLvoid CubeInitBuffer()
 {
@@ -684,6 +800,7 @@ GLvoid CarInitBuffer()
 	glGenVertexArrays(2, &vao[3]);
 	glGenBuffers(2, &vbo[0]);
 	glGenBuffers(2, &vbo[1]);
+	glGenBuffers(2, &vbo[2]);
 
 	glBindVertexArray(vao[3]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -697,6 +814,11 @@ GLvoid CarInitBuffer()
 	GLint nAttribute = glGetAttribLocation(s_program, "vNormal");
 	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(nAttribute);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outuv1[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(2);
 }
 GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 {

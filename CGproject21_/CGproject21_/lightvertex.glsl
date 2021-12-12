@@ -22,5 +22,5 @@ void main(void)
 gl_Position = projectionTransform*viewTransform *modelTransForm * vec4(vPos, 1.0);
 FragPos = vec3(modelTransForm*vec4(vPos,1.0));
 Normal = vNormal;
-TexCoord = vTexCoord;
+TexCoord - vTexCoord;
 }
