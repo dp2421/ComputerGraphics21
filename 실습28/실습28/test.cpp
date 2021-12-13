@@ -2,25 +2,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
-#include <random>
+#include <random> 
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-#include <gl/glm/glm.hpp>
-#include <gl/glm/ext.hpp>
-#include <gl/glm/gtc/matrix_transform.hpp> //수현
-//#include <glm/glm/glm.hpp>
-//#include <glm/glm/ext.hpp>
-//#include <glm/glm/gtc/matrix_transform.hpp> //예나
-
-
-////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
-
-////////////////////미래의 상대방에게 전하는 메시지////////////////////
-
-//ground가 텍스쳐번호만 다른 함수라 스테이지 인자받아오는 함수 하나로 합쳤어!! Ground(0)이 1스테이지, Ground(1)이 2스테이지. 드로우씬 참고부탁
-//stbi_image_free(data[i]); << 내 컴퓨터에서 계속 튕기던 문제 이 함수 지우니까 해결됐어..!
-//쓴거랑 안 쓴거랑 메모리 10메가정도밖에 차이 안 나긴 하는데 일단 잠시 주석처리 해뒀습니다
+//#include <gl/glm/glm.hpp>
+//#include <gl/glm/ext.hpp>
+//#include <gl/glm/gtc/matrix_transform.hpp> //수현
+#include <glm/glm/glm.hpp>
+#include <glm/glm/ext.hpp>
+#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 using namespace std;
@@ -28,7 +19,6 @@ unsigned int texture[8];
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
-//GLvoid CubeInitBuffer();
 GLvoid GroundInitBuffer();
 GLvoid PlayerInitBuffer();
 GLvoid EndInitBuffer();
@@ -71,11 +61,6 @@ glm::mat4 Carmoving = glm::mat4(1.f);
 glm::mat4 Carmoving2 = glm::mat4(1.f);
 glm::mat4 Carmoving3 = glm::mat4(1.f);
 
-//wasd check
-bool checkW = false;
-bool checkA = false;
-bool checkS = false;
-bool checkD = false;
 
 //충돌 bool값
 bool checkCrash1 = false;
@@ -92,8 +77,7 @@ bool checkTest = false;
 int map1[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
 int map2[30] = { 0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,0,1,0,1,1,1,0,0,1,1,1,0,0,0 };
 
-//obj 관련 변수 
-int loadObj_normalize_center(const char* filename, int j);	//불러오는 함수들 (밑에있음)
+int loadObj_normalize_center(const char* filename, int j);
 struct OBJ {
 	int num_Triangle;
 	const int num_vertices = 3;
@@ -192,37 +176,21 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CubePosZ -= 2.f;
 		CamDirZ -= 2.f;
 		CamPosZ -= 2.f;
-		checkW = true;
-		checkA = false;
-		checkS = false;
-		checkD = false;
 		break;
 	case 'a':
 		CubePosX -= 2.f;
-		checkW = false;
-		checkA = true;
-		checkS = false;
-		checkD = false;
 		break;
 	case 's':
 		CubePosZ += 2.f;
 		CamDirZ += 2.f;
 		CamPosZ += 2.f;
-		checkW = false;
-		checkA = false;
-		checkS = true;
-		checkD = false;
 		break;
 	case 'd':
 		CubePosX += 2.f;
-		checkW = false;
-		checkA = false;
-		checkS = false;
-		checkD = true;
 		break;
 	case 'x':
 		CamPosX += 1.0f;
-		CamDirX += 1.f;	//요게 추가한거
+		CamDirX += 1.f;
 		break;
 	case 'y':
 		CamPosY += 1.0f;
@@ -334,8 +302,8 @@ GLvoid Ground(int i)
 	SR = Move * Rotate * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[0]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -355,8 +323,8 @@ GLvoid Player()
 	glm::mat4 Trans = glm::translate(glm::mat4(1.0f), glm::vec3(CubePosX, 0.7f, CubePosZ));
 	glm::mat4 Mat_Cube = Trans * Rot * Scale;
 
-	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube)); //--- modelTransform 변수에 변환 값 적용하기
+	GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Cube));
 	glBindVertexArray(vao[2]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -396,8 +364,8 @@ GLvoid Car1()
 			default:
 				Mat_Car = Carmoving * Trans;
 			}
-			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car));
 			glBindVertexArray(vao[3]);
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -406,16 +374,13 @@ GLvoid Car1()
 
 			if (checkCrash1 == false)
 			{
-				//cout << cnt[0] << endl;
-
 				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
 				{
-					cout << "collide!!";
 					CubePosX = 0.0f;
 					CubePosZ = 0.0f;
 					CamPosX = 2.0f;
-					CamPosY = 10.0f;
-					CamPosZ = CubePosZ + 20.f;
+					CamPosY = 3.0f;
+					CamPosZ = CubePosZ + 4.f;
 					CamDirZ = CubePosZ - 7.f;
 				}
 			}
@@ -455,7 +420,7 @@ GLvoid Car2()
 			case 3:
 			case 5:
 			case 8:
-				Mat_Car = Carmoving3 * 2.0f * Trans; //속도 좀 더 빠르게
+				Mat_Car = Carmoving3 * 2.0f * Trans;
 				break;
 			case 1:
 			case 4:
@@ -466,8 +431,8 @@ GLvoid Car2()
 			default:
 				Mat_Car = Carmoving * 1.5f * Trans;
 			}
-			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car));
 			glBindVertexArray(vao[3]);
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -476,14 +441,14 @@ GLvoid Car2()
 
 			if (checkCrash2 == false)
 			{
-				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true) //차에 큐브가 갖다 들이박기, 지나가는 차에 치이기 둘 다 충돌 처리
+				if (Collide(getbb_player(CubePosX, CubePosZ), getbb_car(cnt[0], CarPosZ)) == true)
 				{
 					CubePosX = 0.0f;
 					CubePosZ = -60.0f;
 					CamPosX = 2.0f;
-					CamPosY = 10.0f;
-					CamPosZ = CubePosZ + 20.f;
-					CamDirZ = CubePosZ - 7.f;	//카메라 조정(반대편)
+					CamPosY = 3.0f;
+					CamPosZ = CubePosZ + 4.f;
+					CamDirZ = CubePosZ + 7.f;
 				}
 			}
 
@@ -503,8 +468,8 @@ GLvoid BackGround(int i)
 	SR = Move * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[4]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -521,8 +486,8 @@ GLvoid BackGroundL(int i)
 	SR = Move * Rotate * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[4]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -539,8 +504,8 @@ GLvoid BackGroundR(int i)
 	SR = Move * Rotate * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[4]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -558,8 +523,8 @@ GLvoid BackGroundBottom(int i)
 	SR = Move * Rotate * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm");
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[0]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -575,8 +540,8 @@ GLvoid StageClear(int i)
 	SR = Move * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
-	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR)); //--- modelTransform 변수에 변환 값 적용하기
+	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); 
+	glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(SR));
 	glBindVertexArray(vao[4]);
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -611,12 +576,12 @@ GLvoid InitTexture()
 	unsigned char* data[8];
 	stbi_set_flip_vertically_on_load(true);
 
-	glGenTextures(8, texture); //--- 텍스처 생성
+	glGenTextures(8, texture);
 
 	for (int i = 0; i < 8; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D, texture[i]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //--- 현재 바인딩된 텍스처의 파라미터 설정하기
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -649,13 +614,13 @@ GLvoid InitTexture()
 			break;
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, width[i], height[i], 0, GL_RGB, GL_UNSIGNED_BYTE, data[i]); //---텍스처 이미지 정의
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, width[i], height[i], 0, GL_RGB, GL_UNSIGNED_BYTE, data[i]);
 		glGenerateMipmap(GL_TEXTURE_2D);
-		//stbi_image_free(data[i]);
+		stbi_image_free(data[i]);
 	}
 }
 
-void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
+void drawScene()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -664,7 +629,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Camera(); //카메라
 	Projection(); //투영
 
-	/*if (checkTest)
+	if (checkTest)
 	{
 		StageClear(5);
 		CamPosY = 0.f;
@@ -672,8 +637,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 		CamPosZ = 40.0f;
 		CamDirX = 0.0f;
 		CamDirZ = 10.0f;
-
-	}*/
+	}
 	if (checkStage1)
 	{
 		BackGround(6);
@@ -707,16 +671,15 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	glutSwapBuffers();
 }
 
-void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
+void main(int argc, char** argv)
 {
 	//--- 윈도우 생성하기
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(800, 800);
-	glutCreateWindow("길건너 친구들");
+	glutCreateWindow("길건너 아이들");
 
-	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
 	glewInit();
 	make_shaderProgram();
@@ -752,7 +715,7 @@ GLvoid GroundInitBuffer()
 	glGenBuffers(1, &vbo[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(1);
 
 	glGenBuffers(1, &vbo[2]);
@@ -762,10 +725,9 @@ GLvoid GroundInitBuffer()
 	glEnableVertexAttribArray(2);
 
 	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
 GLvoid EndInitBuffer()
@@ -782,7 +744,7 @@ GLvoid EndInitBuffer()
 	glGenBuffers(1, &vbo[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(ending), ending, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(1);
 
 	glGenBuffers(1, &vbo[2]);
@@ -792,16 +754,14 @@ GLvoid EndInitBuffer()
 	glEnableVertexAttribArray(2);
 
 	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
 
 GLvoid PlayerInitBuffer()
 {
 	obj[0].num_Triangle = loadObj_normalize_center("child.obj", 0);
-	//// 5.1. VAO 객체 생성 및 바인딩
 	glGenVertexArrays(2, &vao[2]);
 	glGenBuffers(2, &vbo[0]);
 	glGenBuffers(2, &vbo[1]);
@@ -830,7 +790,6 @@ GLvoid PlayerInitBuffer()
 GLvoid CarInitBuffer()
 {
 	obj[1].num_Triangle = loadObj_normalize_center("car.obj", 1);
-	//// 5.1. VAO 객체 생성 및 바인딩
 	glGenVertexArrays(2, &vao[3]);
 	glGenBuffers(2, &vbo[0]);
 	glGenBuffers(2, &vbo[1]);
@@ -863,17 +822,10 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 void make_vertexShaders()
 {
 	vertexsource = filetobuf("lightvertex.glsl");
-
-	//--- 버텍스 세이더 객체 만들기
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-	//--- 세이더 코드를 세이더 객체에 넣기
 	glShaderSource(vertexShader, 1, (const GLchar**)&vertexsource, 0);
-
-	//--- 버텍스 세이더 컴파일하기
 	glCompileShader(vertexShader);
-
-	//--- 컴파일이 제대로 되지 않은 경우: 에러 체크
 
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
 
@@ -888,13 +840,10 @@ void make_vertexShaders()
 void make_fragmentShaders()
 {
 	fragmentsource = filetobuf("mirrorfragment.glsl");
-	//--- 프래그먼트 세이더 객체 만들기
 	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	//--- 세이더 코드를 세이더 객체에 넣기
+
 	glShaderSource(fragmentShader, 1, (const GLchar**)&fragmentsource, 0);
-	//--- 프래그먼트 세이더 컴파일
 	glCompileShader(fragmentShader);
-	//--- 컴파일이 제대로 되지 않은 경우: 컴파일 에러 체크
 
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
 	if (!result)
@@ -961,10 +910,9 @@ int loadObj_normalize_center(const char* filename, int j)
 	while (1) {
 
 		char lineHeader[128];
-		// read the first word of the line
 		int res = fscanf(objFile, "%s", lineHeader);
 		if (res == EOF)
-			break; // EOF = End Of File. Quit the loop.
+			break;
 		if (strcmp(lineHeader, "v") == 0) {
 			glm::vec3 vertex;
 			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
@@ -1011,9 +959,6 @@ int loadObj_normalize_center(const char* filename, int j)
 		}
 	}
 
-	std::cout << "minX: " << obj[j].minX << " minY: " << obj[j].minY << " minZ: " << obj[j].minZ << std::endl;
-	std::cout << "maxX: " << obj[j].maxX << " maxY: " << obj[j].maxY << " maxZ: " << obj[j].maxZ << std::endl;
-
 	obj[j].aveX = obj[j].sumX / obj[j].vertexIndices.size();
 	obj[j].aveY = obj[j].sumY / obj[j].vertexIndices.size();
 	obj[j].aveZ = obj[j].sumZ / obj[j].vertexIndices.size();
@@ -1022,10 +967,6 @@ int loadObj_normalize_center(const char* filename, int j)
 	obj[j].scaleZ = obj[j].maxZ - obj[j].minZ;
 
 	glm::vec3 temp;
-
-	std::cout << "aveX: " << obj[j].aveX << " aveY: " << obj[j].aveY << " aveZ: " << obj[j].aveZ << std::endl;
-
-	std::cout << "scaleX: " << obj[j].scaleX << " scaleY: " << obj[j].scaleY << " scaleZ: " << obj[j].scaleZ << std::endl;
 
 	for (unsigned int i = 0; i < obj[j].vertexIndices.size(); i++) {
 		unsigned int vertexIndex = obj[j].vertexIndices[i];
@@ -1039,8 +980,6 @@ int loadObj_normalize_center(const char* filename, int j)
 		temp.z = ((temp.z * 2.0f) / obj[j].scaleZ) - 1.0f;
 
 		obj[j].outvertex.push_back(temp);
-		//glm::vec3 vertex = temp_vertices[vertexIndex - 1];
-		//outvertex.push_back(vertex);
 	}
 	for (unsigned int i = 0; i < obj[j].uvIndices.size(); i++) {
 		unsigned int uvIndex = obj[j].uvIndices[i];
@@ -1052,6 +991,5 @@ int loadObj_normalize_center(const char* filename, int j)
 		glm::vec3 vertex = obj[j].temp_normals[normalIndex - 1];
 		obj[j].outnormal.push_back(vertex);
 	}
-
 	return obj[j].outvertex.size();
 }
