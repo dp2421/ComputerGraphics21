@@ -28,7 +28,7 @@ unsigned int texture[6];
 
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int, int);
-GLvoid CubeInitBuffer();
+//GLvoid CubeInitBuffer();
 GLvoid GroundInitBuffer();
 GLvoid PlayerInitBuffer();
 GLvoid EndInitBuffer();
@@ -93,42 +93,27 @@ int map1[30] = { 0,0,0,0,1,1,1,0,0,1,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,0,0,0 };
 int map2[30] = { 0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,0,1,0,1,1,1,0,0,1,1,1,0,0,0 };
 
 //obj 관련 변수 
-int loadObj(const char* filename);
-int loadObj_normalize_center(const char* filename);	//불러오는 함수들 (밑에있음)
-int loadObj_normalize_center1(const char* filename);
+int loadObj_normalize_center(const char* filename, int j);	//불러오는 함수들 (밑에있음)
+struct OBJ {
+	int num_Triangle;
+	const int num_vertices = 3;
+	const int num_triangles = 1;
+	std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
+	std::vector< glm::vec3 > temp_vertices;
+	std::vector< glm::vec2 > temp_uvs;
+	std::vector< glm::vec3 > temp_normals;
+	std::vector< glm::vec3 > outvertex, outnormal;
+	std::vector< glm::vec2 > outuv;
+	float sumX = 0.0, sumY = 0.0, sumZ = 0.0;
+	float aveX, aveY, aveZ;
+	float scaleX, scaleY, scaleZ;
+	float minX = 0.0, minY = 0.0, minZ = 0.0;
+	float maxX = 0.0, maxY = 0.0, maxZ = 0.0;
+	float scaleAll;
+};
 
-int num_Triangle;
-const int num_vertices = 3;
-const int num_triangles = 1;
-std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
-std::vector< glm::vec3 > temp_vertices;
-std::vector< glm::vec2 > temp_uvs;
-std::vector< glm::vec3 > temp_normals;
-std::vector< glm::vec3 > outvertex, outnormal;
-std::vector< glm::vec2 > outuv;
-float sumX = 0.0, sumY = 0.0, sumZ = 0.0;
-float aveX, aveY, aveZ;
-float scaleX, scaleY, scaleZ;
-float minX = 0.0, minY = 0.0, minZ = 0.0;
-float maxX = 0.0, maxY = 0.0, maxZ = 0.0;
-float scaleAll;
+OBJ obj[2];
 
-
-int num_Triangle1;
-const int num_vertices1 = 3;
-const int num_triangles1 = 1;
-std::vector< unsigned int > vertexIndices1, uvIndices1, normalIndices1;
-std::vector< glm::vec3 > temp_vertices1;
-std::vector< glm::vec2 > temp_uvs1;
-std::vector< glm::vec3 > temp_normals1;
-std::vector< glm::vec3 > outvertex1, outnormal1;
-std::vector< glm::vec2 > outuv1;
-float sumX1 = 0.0, sumY1 = 0.0, sumZ1 = 0.0;
-float aveX1, aveY1, aveZ1;
-float scaleX1, scaleY1, scaleZ1;
-float minX1 = 0.0, minY1 = 0.0, minZ1 = 0.0;
-float maxX1 = 0.0, maxY1 = 0.0, maxZ1 = 0.0;
-float scaleAll1;
 struct BB {
 	float minx;
 	float minz;
@@ -176,12 +161,6 @@ GLfloat ground[][3] = {
 	1, 0.0, 1,
 };
 
-GLfloat ground2[][3] = {
-	-1, 0.0, -1,
-	1, 0.0, -1,
-	-1, 0.0, 1,
-	1, 0.0, 1,
-};
 GLfloat ending[][3] = {
 	-1, -1, 0,
 	1, -1, 0,
@@ -189,27 +168,19 @@ GLfloat ending[][3] = {
 	1, 1, 0,
 };
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
-GLuint ground_element2[] = { 2, 0, 1, 2, 1, 3, };
 
-GLfloat cube[][3] = {
-	-0.5, -0.5, -0.5,
-	0.5, -0.5, -0.5,
-	-0.5, 0.5, -0.5,
-	0.5, 0.5, -0.5,
-	-0.5, -0.5, 0.5,
-	0.5, -0.5, 0.5,
-	-0.5, 0.5, 0.5,
-	0.5, 0.5, 0.5,
-};
+//GLfloat cube[][3] = {
+//	-0.5, -0.5, -0.5,
+//	0.5, -0.5, -0.5,
+//	-0.5, 0.5, -0.5,
+//	0.5, 0.5, -0.5,
+//	-0.5, -0.5, 0.5,
+//	0.5, -0.5, 0.5,
+//	-0.5, 0.5, 0.5,
+//	0.5, 0.5, 0.5,
+//};
 
 GLfloat ground_Texture[] = {
-	0, 0.0, 0,
-	1, 0.0, 0,
-	0, 0.0, 1,
-	1, 0.0, 1,
-};
-
-GLfloat ground_Texture2[] = {
 	0, 0.0, 0,
 	1, 0.0, 0,
 	0, 0.0, 1,
@@ -223,14 +194,14 @@ GLfloat end_Texture[] = {
 	1, 1, 0,
 };
 
-GLuint cubelement[36] = {
-	2, 0, 1, 2, 1, 3,
-	0, 4, 5, 0, 5, 1,
-	3, 1, 5, 3, 5, 7,
-	7, 5, 4, 7, 4, 6,
-	6, 4, 0, 6, 0, 2,
-	6, 2, 3, 6, 3, 7
-};
+//GLuint cubelement[36] = {
+//	2, 0, 1, 2, 1, 3,
+//	0, 4, 5, 0, 5, 1,
+//	3, 1, 5, 3, 5, 7,
+//	7, 5, 4, 7, 4, 6,
+//	6, 4, 0, 6, 0, 2,
+//	6, 2, 3, 6, 3, 7
+//};
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
@@ -409,7 +380,7 @@ GLvoid Player()
 	glActiveTexture(GL_TEXTURE0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindTexture(GL_TEXTURE_2D, texture[2]);
-	glDrawArrays(GL_TRIANGLES, 0, num_Triangle);
+	glDrawArrays(GL_TRIANGLES, 0, obj[0].num_Triangle);
 }
 
 GLvoid Car1()
@@ -453,7 +424,7 @@ GLvoid Car1()
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glBindTexture(GL_TEXTURE_2D, texture[3]);
-			glDrawArrays(GL_TRIANGLES, 0, num_Triangle1);
+			glDrawArrays(GL_TRIANGLES, 0, obj[1].num_Triangle);
 
 			if (checkCrash1 == false)
 			{
@@ -525,7 +496,7 @@ GLvoid Car2()
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glBindTexture(GL_TEXTURE_2D, texture[4]);
-			glDrawArrays(GL_TRIANGLES, 0, num_Triangle1);
+			glDrawArrays(GL_TRIANGLES, 0, obj[1].num_Triangle);
 
 			if (checkCrash2 == false)
 			{
@@ -569,7 +540,7 @@ GLvoid StageClear(int i)
 	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, 6.0f));
 	glm::mat4 Rotate = glm::mat4(1.0f);
 	glm::mat4 SR = glm::mat4(1.0f);
-	SR = Move*Scale;
+	SR = Move * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
@@ -587,7 +558,7 @@ GLvoid Light()
 	int lightPosLocation = glGetUniformLocation(s_program, "lightPos");
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
 	glUniform3f(lightPosLocation, 0, 10, -60);
-	if(checkTest==true)
+	if (checkTest == true)
 		glUniform3f(lightPosLocation, 0, 0, 100);
 
 }
@@ -664,36 +635,6 @@ GLvoid GroundInitBuffer()
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element), ground_element, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
-}
-
-GLvoid GroundInitBuffer2()
-{
-	glGenVertexArrays(1, &vao[1]);
-	glBindVertexArray(vao[1]);
-
-	glGenBuffers(1, &vbo[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground2), ground2, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &vbo[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground2), ground2, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
-	glEnableVertexAttribArray(1);
-
-	glGenBuffers(1, &vbo[2]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground_Texture2), ground_Texture2, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-	glEnableVertexAttribArray(2);
-
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ground_element2), ground_element2, GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	//glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
 }
@@ -779,9 +720,8 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glewInit();
 	make_shaderProgram();
 	InitTexture();
-	CubeInitBuffer();
+	//CubeInitBuffer();
 	GroundInitBuffer();
-	GroundInitBuffer2();
 	PlayerInitBuffer();
 	CarInitBuffer();
 	EndInitBuffer();
@@ -800,7 +740,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 
 GLvoid PlayerInitBuffer()
 {
-	num_Triangle = loadObj_normalize_center("child.obj");
+	obj[0].num_Triangle = loadObj_normalize_center("child.obj", 0);
 	//// 5.1. VAO 객체 생성 및 바인딩
 	glGenVertexArrays(2, &vao[2]);
 	glGenBuffers(2, &vbo[0]);
@@ -809,50 +749,50 @@ GLvoid PlayerInitBuffer()
 
 	glBindVertexArray(vao[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, outvertex.size() * sizeof(glm::vec3), &outvertex[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[0].outvertex.size() * sizeof(glm::vec3), &obj[0].outvertex[0], GL_STATIC_DRAW);
 	GLint pAttribute = glGetAttribLocation(s_program, "vPos");
 	glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(pAttribute);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outnormal[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[0].outnormal.size() * sizeof(glm::vec3), &obj[0].outnormal[0], GL_STATIC_DRAW);
 	GLint nAttribute = glGetAttribLocation(s_program, "vNormal");
 	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(nAttribute);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outuv[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[0].outnormal.size() * sizeof(glm::vec3), &obj[0].outuv[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(2);
 
 }
-GLvoid CubeInitBuffer()
-{
-	glGenVertexArrays(1, &vao[1]);
-	glBindVertexArray(vao[1]);
-
-	glGenBuffers(1, &vbo[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &vbo[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
-	glEnableVertexAttribArray(1);
-
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubelement), cubelement, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
-}
+//GLvoid CubeInitBuffer()
+//{
+//	glGenVertexArrays(1, &vao[1]);
+//	glBindVertexArray(vao[1]);
+//
+//	glGenBuffers(1, &vbo[0]);
+//	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+//	glEnableVertexAttribArray(0);
+//
+//	glGenBuffers(1, &vbo[1]);
+//	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+//	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+//
+//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
+//	glEnableVertexAttribArray(1);
+//
+//	glGenBuffers(1, &ebo);
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // GL_ELEMENT_ARRAY_BUFFER 버퍼 유형으로 바인딩
+//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubelement), cubelement, GL_STATIC_DRAW);
+//	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+//	glEnableVertexAttribArray(2);	//vao에 vbo를 묶어줌
+//}
 GLvoid CarInitBuffer()
 {
-	num_Triangle1 = loadObj_normalize_center1("car.obj");
+	obj[1].num_Triangle = loadObj_normalize_center("car.obj", 1);
 	//// 5.1. VAO 객체 생성 및 바인딩
 	glGenVertexArrays(2, &vao[3]);
 	glGenBuffers(2, &vbo[0]);
@@ -861,19 +801,19 @@ GLvoid CarInitBuffer()
 
 	glBindVertexArray(vao[3]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, outvertex1.size() * sizeof(glm::vec3), &outvertex1[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[1].outvertex.size() * sizeof(glm::vec3), &obj[1].outvertex[0], GL_STATIC_DRAW);
 	GLint pAttribute = glGetAttribLocation(s_program, "vPos");
 	glVertexAttribPointer(pAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(pAttribute);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, outnormal1.size() * sizeof(glm::vec3), &outnormal1[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[1].outnormal.size() * sizeof(glm::vec3), &obj[1].outnormal[0], GL_STATIC_DRAW);
 	GLint nAttribute = glGetAttribLocation(s_program, "vNormal");
 	glVertexAttribPointer(nAttribute, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(nAttribute);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
-	glBufferData(GL_ARRAY_BUFFER, outnormal.size() * sizeof(glm::vec3), &outuv1[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj[1].outnormal.size() * sizeof(glm::vec3), &obj[1].outuv[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(2);
 }
@@ -969,7 +909,8 @@ GLchar* filetobuf(const char* file) {
 
 	return buf;
 }
-int loadObj(const char* filename)
+
+int loadObj_normalize_center(const char* filename, int j)
 {
 	FILE* objFile;
 
@@ -990,27 +931,27 @@ int loadObj(const char* filename)
 			glm::vec3 vertex;
 			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 
-			if (vertex.x < minX) minX = vertex.x;
-			if (vertex.y < minY) minY = vertex.y;
-			if (vertex.z < minZ) minZ = vertex.z;
-			if (vertex.x > maxX) maxX = vertex.x;
-			if (vertex.y > maxY) maxY = vertex.y;
-			if (vertex.z > maxZ) maxZ = vertex.z;
-			sumX += vertex.x;
-			sumY += vertex.y;
-			sumZ += vertex.z;
+			if (vertex.x < obj[j].minX) obj[j].minX = vertex.x;
+			if (vertex.y < obj[j].minY) obj[j].minY = vertex.y;
+			if (vertex.z < obj[j].minZ) obj[j].minZ = vertex.z;
+			if (vertex.x > obj[j].maxX) obj[j].maxX = vertex.x;
+			if (vertex.y > obj[j].maxY) obj[j].maxY = vertex.y;
+			if (vertex.z > obj[j].maxZ) obj[j].maxZ = vertex.z;
+			obj[j].sumX += vertex.x;
+			obj[j].sumY += vertex.y;
+			obj[j].sumZ += vertex.z;
 
-			temp_vertices.push_back(vertex);
+			obj[j].temp_vertices.push_back(vertex);
 		}
 		else if (strcmp(lineHeader, "vt") == 0) {
 			glm::vec2 uv;
 			fscanf(objFile, "%f %f\n", &uv.x, &uv.y);
-			temp_uvs.push_back(uv);
+			obj[j].temp_uvs.push_back(uv);
 		}
 		else if (strcmp(lineHeader, "vn") == 0) {
 			glm::vec3 normal;
 			fscanf(objFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
+			obj[j].temp_normals.push_back(normal);
 		}
 		else if (strcmp(lineHeader, "f") == 0) {
 			std::string vertex1, vertex2, vertex3;
@@ -1020,272 +961,59 @@ int loadObj(const char* filename)
 				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
 				return false;
 			}
-			vertexIndices.push_back(vertexIndex[0]);
-			vertexIndices.push_back(vertexIndex[1]);
-			vertexIndices.push_back(vertexIndex[2]);
-			uvIndices.push_back(uvIndex[0]);
-			uvIndices.push_back(uvIndex[1]);
-			uvIndices.push_back(uvIndex[2]);
-			normalIndices.push_back(normalIndex[0]);
-			normalIndices.push_back(normalIndex[1]);
-			normalIndices.push_back(normalIndex[2]);
+			obj[j].vertexIndices.push_back(vertexIndex[0]);
+			obj[j].vertexIndices.push_back(vertexIndex[1]);
+			obj[j].vertexIndices.push_back(vertexIndex[2]);
+			obj[j].uvIndices.push_back(uvIndex[0]);
+			obj[j].uvIndices.push_back(uvIndex[1]);
+			obj[j].uvIndices.push_back(uvIndex[2]);
+			obj[j].normalIndices.push_back(normalIndex[0]);
+			obj[j].normalIndices.push_back(normalIndex[1]);
+			obj[j].normalIndices.push_back(normalIndex[2]);
 		}
 	}
 
-	std::cout << "minX: " << minX << " minY: " << minY << " minZ: " << minZ << std::endl;
-	std::cout << "maxX: " << maxX << " maxY: " << maxY << " maxZ: " << maxZ << std::endl;
+	std::cout << "minX: " << obj[j].minX << " minY: " << obj[j].minY << " minZ: " << obj[j].minZ << std::endl;
+	std::cout << "maxX: " << obj[j].maxX << " maxY: " << obj[j].maxY << " maxZ: " << obj[j].maxZ << std::endl;
 
-	aveX = sumX / vertexIndices.size();
-	aveY = sumY / vertexIndices.size();
-	aveZ = sumZ / vertexIndices.size();
-	scaleX = (1.0 - maxX) * 10 + 1;
-	scaleY = (1.0 - maxY) * 10 + 1;
-	scaleZ = (1.0 - maxZ) * 10 + 1;
-
-	if (scaleX > scaleY) {
-		if (scaleY > scaleZ)
-			scaleAll = scaleZ;
-		else
-			scaleAll = scaleY;
-	}
-	else if (scaleX < scaleY) {
-		if (scaleX < scaleZ)
-			scaleAll = scaleX;
-		else
-			scaleAll = scaleZ;
-	}
-	std::cout << "aveX: " << aveX << " aveY: " << aveY << " aveZ: " << aveZ << std::endl;
-
-	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
-		unsigned int vertexIndex = vertexIndices[i];
-		glm::vec3 vertex = temp_vertices[vertexIndex - 1];
-		outvertex.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < uvIndices.size(); i++) {
-		unsigned int uvIndex = uvIndices[i];
-		glm::vec2 vertex = temp_uvs[uvIndex - 1];
-		outuv.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < normalIndices.size(); i++) {
-		unsigned int normalIndex = normalIndices[i];
-		glm::vec3 vertex = temp_normals[normalIndex - 1];
-		outnormal.push_back(vertex);
-	}
-
-	return outvertex.size();
-}
-int loadObj_normalize_center(const char* filename)
-{
-	FILE* objFile;
-
-	fopen_s(&objFile, filename, "rb");
-
-	if (objFile == NULL) {
-		printf("Impossible to open the file !\n");
-		return false;
-	}
-	while (1) {
-
-		char lineHeader[128];
-		// read the first word of the line
-		int res = fscanf(objFile, "%s", lineHeader);
-		if (res == EOF)
-			break; // EOF = End Of File. Quit the loop.
-		if (strcmp(lineHeader, "v") == 0) {
-			glm::vec3 vertex;
-			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-
-			if (vertex.x < minX) minX = vertex.x;
-			if (vertex.y < minY) minY = vertex.y;
-			if (vertex.z < minZ) minZ = vertex.z;
-			if (vertex.x > maxX) maxX = vertex.x;
-			if (vertex.y > maxY) maxY = vertex.y;
-			if (vertex.z > maxZ) maxZ = vertex.z;
-			sumX += vertex.x;
-			sumY += vertex.y;
-			sumZ += vertex.z;
-
-			temp_vertices.push_back(vertex);
-		}
-		else if (strcmp(lineHeader, "vt") == 0) {
-			glm::vec2 uv;
-			fscanf(objFile, "%f %f\n", &uv.x, &uv.y);
-			temp_uvs.push_back(uv);
-		}
-		else if (strcmp(lineHeader, "vn") == 0) {
-			glm::vec3 normal;
-			fscanf(objFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
-		}
-		else if (strcmp(lineHeader, "f") == 0) {
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf(objFile, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9) {
-				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-				return false;
-			}
-			vertexIndices.push_back(vertexIndex[0]);
-			vertexIndices.push_back(vertexIndex[1]);
-			vertexIndices.push_back(vertexIndex[2]);
-			uvIndices.push_back(uvIndex[0]);
-			uvIndices.push_back(uvIndex[1]);
-			uvIndices.push_back(uvIndex[2]);
-			normalIndices.push_back(normalIndex[0]);
-			normalIndices.push_back(normalIndex[1]);
-			normalIndices.push_back(normalIndex[2]);
-		}
-	}
-
-	std::cout << "minX: " << minX << " minY: " << minY << " minZ: " << minZ << std::endl;
-	std::cout << "maxX: " << maxX << " maxY: " << maxY << " maxZ: " << maxZ << std::endl;
-
-	aveX = sumX / vertexIndices.size();
-	aveY = sumY / vertexIndices.size();
-	aveZ = sumZ / vertexIndices.size();
-	scaleX = maxX - minX;
-	scaleY = maxY - minY;
-	scaleZ = maxZ - minZ;
+	obj[j].aveX = obj[j].sumX / obj[j].vertexIndices.size();
+	obj[j].aveY = obj[j].sumY / obj[j].vertexIndices.size();
+	obj[j].aveZ = obj[j].sumZ / obj[j].vertexIndices.size();
+	obj[j].scaleX = obj[j].maxX - obj[j].minX;
+	obj[j].scaleY = obj[j].maxY - obj[j].minY;
+	obj[j].scaleZ = obj[j].maxZ - obj[j].minZ;
 
 	glm::vec3 temp;
 
-	std::cout << "aveX: " << aveX << " aveY: " << aveY << " aveZ: " << aveZ << std::endl;
+	std::cout << "aveX: " << obj[j].aveX << " aveY: " << obj[j].aveY << " aveZ: " << obj[j].aveZ << std::endl;
 
-	std::cout << "scaleX: " << scaleX << " scaleY: " << scaleY << " scaleZ: " << scaleZ << std::endl;
+	std::cout << "scaleX: " << obj[j].scaleX << " scaleY: " << obj[j].scaleY << " scaleZ: " << obj[j].scaleZ << std::endl;
 
-	for (unsigned int i = 0; i < vertexIndices.size(); i++) {
-		unsigned int vertexIndex = vertexIndices[i];
-		temp = temp_vertices[vertexIndex - 1];
-		temp.x = temp.x - minX;
-		temp.y = temp.y - minY;
-		temp.z = temp.z - minZ;
+	for (unsigned int i = 0; i < obj[j].vertexIndices.size(); i++) {
+		unsigned int vertexIndex = obj[j].vertexIndices[i];
+		temp = obj[j].temp_vertices[vertexIndex - 1];
+		temp.x = temp.x - obj[j].minX;
+		temp.y = temp.y - obj[j].minY;
+		temp.z = temp.z - obj[j].minZ;
 
-		temp.x = ((temp.x * 2.0f) / scaleX) - 1.0f;
-		temp.y = ((temp.y * 2.0f) / scaleY) - 1.0f;
-		temp.z = ((temp.z * 2.0f) / scaleZ) - 1.0f;
+		temp.x = ((temp.x * 2.0f) / obj[j].scaleX) - 1.0f;
+		temp.y = ((temp.y * 2.0f) / obj[j].scaleY) - 1.0f;
+		temp.z = ((temp.z * 2.0f) / obj[j].scaleZ) - 1.0f;
 
-		outvertex.push_back(temp);
+		obj[j].outvertex.push_back(temp);
 		//glm::vec3 vertex = temp_vertices[vertexIndex - 1];
 		//outvertex.push_back(vertex);
 	}
-	for (unsigned int i = 0; i < uvIndices.size(); i++) {
-		unsigned int uvIndex = uvIndices[i];
-		glm::vec2 vertex = temp_uvs[uvIndex - 1];
-		outuv.push_back(vertex);
+	for (unsigned int i = 0; i < obj[j].uvIndices.size(); i++) {
+		unsigned int uvIndex = obj[j].uvIndices[i];
+		glm::vec2 vertex = obj[j].temp_uvs[uvIndex - 1];
+		obj[j].outuv.push_back(vertex);
 	}
-	for (unsigned int i = 0; i < normalIndices.size(); i++) {
-		unsigned int normalIndex = normalIndices[i];
-		glm::vec3 vertex = temp_normals[normalIndex - 1];
-		outnormal.push_back(vertex);
-	}
-
-	return outvertex.size();
-}
-int loadObj_normalize_center1(const char* filename)
-{
-	FILE* objFile;
-
-	fopen_s(&objFile, filename, "rb");
-
-	if (objFile == NULL) {
-		printf("Impossible to open the file !\n");
-		return false;
-	}
-	while (1) {
-
-		char lineHeader[128];
-		// read the first word of the line
-		int res = fscanf(objFile, "%s", lineHeader);
-		if (res == EOF)
-			break; // EOF = End Of File. Quit the loop.
-		if (strcmp(lineHeader, "v") == 0) {
-			glm::vec3 vertex;
-			fscanf(objFile, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-
-			if (vertex.x < minX1) minX1 = vertex.x;
-			if (vertex.y < minY1) minY1 = vertex.y;
-			if (vertex.z < minZ1) minZ1 = vertex.z;
-			if (vertex.x > maxX1) maxX1 = vertex.x;
-			if (vertex.y > maxY1) maxY1 = vertex.y;
-			if (vertex.z > maxZ1) maxZ1 = vertex.z;
-			sumX1 += vertex.x;
-			sumY1 += vertex.y;
-			sumZ1 += vertex.z;
-
-			temp_vertices1.push_back(vertex);
-		}
-		else if (strcmp(lineHeader, "vt") == 0) {
-			glm::vec2 uv;
-			fscanf(objFile, "%f %f\n", &uv.x, &uv.y);
-			temp_uvs1.push_back(uv);
-		}
-		else if (strcmp(lineHeader, "vn") == 0) {
-			glm::vec3 normal;
-			fscanf(objFile, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals1.push_back(normal);
-		}
-		else if (strcmp(lineHeader, "f") == 0) {
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			int matches = fscanf(objFile, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9) {
-				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-				return false;
-			}
-			vertexIndices1.push_back(vertexIndex[0]);
-			vertexIndices1.push_back(vertexIndex[1]);
-			vertexIndices1.push_back(vertexIndex[2]);
-			uvIndices1.push_back(uvIndex[0]);
-			uvIndices1.push_back(uvIndex[1]);
-			uvIndices1.push_back(uvIndex[2]);
-			normalIndices1.push_back(normalIndex[0]);
-			normalIndices1.push_back(normalIndex[1]);
-			normalIndices1.push_back(normalIndex[2]);
-		}
+	for (unsigned int i = 0; i < obj[j].normalIndices.size(); i++) {
+		unsigned int normalIndex = obj[j].normalIndices[i];
+		glm::vec3 vertex = obj[j].temp_normals[normalIndex - 1];
+		obj[j].outnormal.push_back(vertex);
 	}
 
-	std::cout << "minX: " << minX << " minY: " << minY << " minZ: " << minZ << std::endl;
-	std::cout << "maxX: " << maxX << " maxY: " << maxY << " maxZ: " << maxZ << std::endl;
-
-	aveX1 = sumX1 / vertexIndices1.size();
-	aveY1 = sumY1 / vertexIndices1.size();
-	aveZ1 = sumZ1 / vertexIndices1.size();
-	scaleX1 = maxX1 - minX1;
-	scaleY1 = maxY1 - minY1;
-	scaleZ1 = maxZ1 - minZ1;
-
-
-	glm::vec3 temp;
-
-	std::cout << "aveX: " << aveX1 << " aveY: " << aveY1 << " aveZ: " << aveZ1 << std::endl;
-
-	std::cout << "scaleX: " << scaleX1 << " scaleY: " << scaleY1 << " scaleZ: " << scaleZ1 << std::endl;
-
-	for (unsigned int i = 0; i < vertexIndices1.size(); i++) {
-		unsigned int vertexIndex = vertexIndices1[i];
-		temp = temp_vertices1[vertexIndex - 1];
-		temp.x = temp.x - minX1;
-		temp.y = temp.y - minY1;
-		temp.z = temp.z - minZ1;
-
-		temp.x = ((temp.x * 2.0f) / scaleX1) - 1.0f;
-		temp.y = ((temp.y * 2.0f) / scaleY1) - 1.0f;
-		temp.z = ((temp.z * 2.0f) / scaleZ1) - 1.0f;
-
-		outvertex1.push_back(temp);
-		//glm::vec3 vertex = temp_vertices[vertexIndex - 1];
-		//outvertex.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < uvIndices1.size(); i++) {
-		unsigned int uvIndex = uvIndices1[i];
-		glm::vec2 vertex = temp_uvs1[uvIndex - 1];
-		outuv1.push_back(vertex);
-	}
-	for (unsigned int i = 0; i < normalIndices1.size(); i++) {
-		unsigned int normalIndex = normalIndices1[i];
-		glm::vec3 vertex = temp_normals1[normalIndex - 1];
-		outnormal1.push_back(vertex);
-	}
-
-	return outvertex1.size();
+	return obj[j].outvertex.size();
 }
