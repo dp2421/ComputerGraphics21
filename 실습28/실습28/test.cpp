@@ -244,11 +244,22 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'r':
 		checkCrash1 = false;
-		CubePosX = 0.0f;
-		CubePosZ = 0.0f;
-		CamPosX = 2.0f;
-		CamPosY = 10.0f;
-		CamPosZ = 20.0f;
+		if (checkStage1)
+		{
+			CubePosX = 0.0f;
+			CubePosZ = 0.0f;
+
+			CamPosX = 2.0f;
+			CamPosY = 3.0f;
+			CamPosZ = 4.0f;
+		}
+		if (checkStage2)
+		{
+			CubePosZ = -60.0f;
+			CamPosX = 2.0f;
+			CamPosY = 5.0f;
+			CamPosZ = CubePosZ + 8.f;
+		}
 		break;
 	case 'q':
 		exit(0);
