@@ -6,12 +6,12 @@
 #include <gl/glew.h>
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
-//#include <gl/glm/glm.hpp>
-//#include <gl/glm/ext.hpp>
-//#include <gl/glm/gtc/matrix_transform.hpp> //수현
-#include <glm/glm/glm.hpp>
-#include <glm/glm/ext.hpp>
-#include <glm/glm/gtc/matrix_transform.hpp> //예나
+#include <gl/glm/glm.hpp>
+#include <gl/glm/ext.hpp>
+#include <gl/glm/gtc/matrix_transform.hpp> //수현
+//#include <glm/glm/glm.hpp>
+//#include <glm/glm/ext.hpp>
+//#include <glm/glm/gtc/matrix_transform.hpp> //예나
 
 
 ////////너랑 나랑 gl경로가 달라서 서로 상대방 거 주석처리하고 사용하는 걸로 하자!/////////
@@ -169,16 +169,6 @@ GLfloat ending[][3] = {
 };
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
 
-//GLfloat cube[][3] = {
-//	-0.5, -0.5, -0.5,
-//	0.5, -0.5, -0.5,
-//	-0.5, 0.5, -0.5,
-//	0.5, 0.5, -0.5,
-//	-0.5, -0.5, 0.5,
-//	0.5, -0.5, 0.5,
-//	-0.5, 0.5, 0.5,
-//	0.5, 0.5, 0.5,
-//};
 
 GLfloat ground_Texture[] = {
 	0, 0.0, 0,
@@ -193,15 +183,6 @@ GLfloat end_Texture[] = {
 	0, 1, 0,
 	1, 1, 0,
 };
-
-//GLuint cubelement[36] = {
-//	2, 0, 1, 2, 1, 3,
-//	0, 4, 5, 0, 5, 1,
-//	3, 1, 5, 3, 5, 7,
-//	7, 5, 4, 7, 4, 6,
-//	6, 4, 0, 6, 0, 2,
-//	6, 2, 3, 6, 3, 7
-//};
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
@@ -267,18 +248,10 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'r':
 		checkCrash1 = false;
 		CubePosX = 0.0f;
-		CubePosZ = 30.0f;
+		CubePosZ = 0.0f;
 		CamPosX = 2.0f;
-		CamPosY = 5.0f;
-		CamPosZ = 50.0f;
-		break;
-	case 't':
-		checkTest = true;
-		CamPosY = 0.f;
-		CamPosX = 0.0f;
-		CamPosZ = 40.0f;
-		CamDirX = 0.0f;
-		CamDirZ = 10.0f;
+		CamPosY = 10.0f;
+		CamPosZ = 20.0f;
 		break;
 	case 'q':
 		exit(0);
@@ -287,29 +260,29 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-float cnt[3] = { -10.f };	//도로의 끝인지, 체크하는 변수
+float cnt[3] = { -30.f,-30.f,-30.f };	//도로의 끝인지, 체크하는 변수
 GLfloat CarPosZ;
 GLvoid TimeFunction(int value)
 {
-	if (cnt[0] >= 10.f) {
-		cnt[0] = -10.f;
+	if (cnt[0] >= 30.f) {
+		cnt[0] = -30.f;
 		Carmoving = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
-	else if (cnt[1] >= 10.f) {
-		cnt[1] = -10.f;
+	else if (cnt[1] >= 30.f) {
+		cnt[1] = -30.f;
 		Carmoving2 = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
-	else if (cnt[2] >= 10.f) {
-		cnt[2] = -10.f;
+	else if (cnt[2] >= 30.f) {
+		cnt[2] = -30.f;
 		Carmoving3 = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, 0));
 	}
 	else {
-		Carmoving = glm::translate(Carmoving, glm::vec3(0.05, 0, 0));
-		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.08, 0, 0));
-		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.1, 0, 0));
-		cnt[0] += 0.05;
-		cnt[1] += 0.08;
-		cnt[2] += 0.1;
+		Carmoving = glm::translate(Carmoving, glm::vec3(0.1, 0, 0));
+		Carmoving2 = glm::translate(Carmoving2, glm::vec3(0.16, 0, 0));
+		Carmoving3 = glm::translate(Carmoving3, glm::vec3(0.2, 0, 0));
+		cnt[0] += 0.1;
+		cnt[1] += 0.16;
+		cnt[2] += 0.2;
 		for (int i = 0; i < 30; ++i)
 		{
 			CarPosZ = 30 - 2 * i;
@@ -345,7 +318,7 @@ GLvoid Projection()
 GLvoid Ground(int i)
 {
 	//바닥 그리기=========================================================================================================================
-	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 2.0f, 10.0f));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(30.0f, 2.0f, 30.0f));
 	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0, 0, -30.f));
 	glm::mat4 Rotate = glm::mat4(1.0f);
 	Rotate = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -397,8 +370,7 @@ GLvoid Car1()
 			glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(2.f, 1.f, 1.f));
 			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
 			glm::mat4 Mat_Car = glm::mat4(1.f);
-			glm::mat4 Trans_Car = glm::mat4(1.f);
-			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 0.6f, CarPosZ));
+			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-30.0f, 0.9f, CarPosZ));
 			switch (mapcnt)
 			{
 			case 0:
@@ -416,10 +388,8 @@ GLvoid Car1()
 			default:
 				Mat_Car = Carmoving * Trans;
 			}
-			//Trans_Car = Mat_Car * UpperTrans * Scale;
-			Trans_Car = Mat_Car;
 			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[3]);
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -470,8 +440,7 @@ GLvoid Car2()
 			glm::mat4 BottomScale = glm::scale(glm::mat4(1.f), glm::vec3(2.f, 1.f, 1.f));
 			glm::mat4 UpperTrans = glm::translate(glm::mat4(1.f), glm::vec3(0, 0.7, 0));
 			glm::mat4 Mat_Car = glm::mat4(1.f);
-			glm::mat4 Trans_Car = glm::mat4(1.f);
-			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-10.0f, 0.6f, CarPosZ));
+			Trans = glm::translate(glm::mat4(1.0f), glm::vec3(-30.0f, 0.9f, CarPosZ));
 			switch (mapcnt)
 			{
 			case 0:
@@ -489,9 +458,8 @@ GLvoid Car2()
 			default:
 				Mat_Car = Carmoving * 1.5f * Trans;
 			}
-			Trans_Car = Mat_Car;
 			GLuint TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
-			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Trans_Car)); //--- modelTransform 변수에 변환 값 적용하기
+			glUniformMatrix4fv(TransformLocation, 1, GL_FALSE, glm::value_ptr(Mat_Car)); //--- modelTransform 변수에 변환 값 적용하기
 			glBindVertexArray(vao[3]);
 			glActiveTexture(GL_TEXTURE0);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -510,15 +478,19 @@ GLvoid Car2()
 					CamDirZ = CubePosZ - 7.f;	//카메라 조정(반대편)
 				}
 			}
+
+			if (CubePosZ >= 0)
+				checkTest = true;
+
 			mapcnt++;
 		}
 	}
 }
 
-GLvoid BackGround(int i) //미완성 잘라서 보이는 오류 있음
+GLvoid BackGround(int i)
 {
 	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 50.0f, 1.0f));
-	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -80.0f));
+	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, -70.0f));
 	glm::mat4 SR = glm::mat4(1.0f);
 	SR = Move * Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
@@ -571,7 +543,7 @@ GLvoid BackGroundR(int i)
 GLvoid BackGroundBottom(int i)
 {
 	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 1.0f, 50.0f));
-	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0, -10.0f, -30.f));
+	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0, -20.0f, -30.f));
 	glm::mat4 Rotate = glm::mat4(1.0f);
 	Rotate = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 SR = glm::mat4(1.0f);
@@ -608,11 +580,19 @@ GLvoid Light()
 {
 	int lightColorLocation = glGetUniformLocation(s_program, "lightColor");
 	int lightPosLocation = glGetUniformLocation(s_program, "lightPos");
-	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
-	glUniform3f(lightPosLocation, 0, 10, -60);
-	if (checkTest == true)
-		glUniform3f(lightPosLocation, 0, 0, 100);
 
+	if (checkStage2 == true)
+		glUniform3f(lightColorLocation, 1, 0.72, 0.57);
+	else
+		glUniform3f(lightColorLocation, 0.94, 0.97, 1);
+
+	if (checkTest == true)
+	{
+		glUniform3f(lightPosLocation, 0, 0, 100);
+		glUniform3f(lightColorLocation, 1, 1, 1);
+	}
+	else
+		glUniform3f(lightPosLocation, 0, 10, -60);
 }
 
 GLvoid InitTexture()
@@ -679,6 +659,11 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	if (checkTest)
 	{
 		StageClear(5);
+		CamPosY = 0.f;
+		CamPosX = 0.0f;
+		CamPosZ = 40.0f;
+		CamDirX = 0.0f;
+		CamDirZ = 10.0f;
 
 	}
 	if (checkStage1)
@@ -726,7 +711,6 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glewInit();
 	make_shaderProgram();
 	InitTexture();
-	//CubeInitBuffer();
 	GroundInitBuffer();
 	PlayerInitBuffer();
 	CarInitBuffer();
