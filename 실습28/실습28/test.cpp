@@ -19,7 +19,8 @@
 ////////////////////미래의 상대방에게 전하는 메시지////////////////////
 
 //ground가 텍스쳐번호만 다른 함수라 스테이지 인자받아오는 함수 하나로 합쳤어!! Ground(0)이 1스테이지, Ground(1)이 2스테이지. 드로우씬 참고부탁
-
+//stbi_image_free(data[i]); << 내 컴퓨터에서 계속 튕기던 문제 이 함수 지우니까 해결됐어..!
+//쓴거랑 안 쓴거랑 메모리 10메가정도밖에 차이 안 나긴 하는데 일단 잠시 주석처리 해뒀습니다
 
 
 using namespace std;
@@ -181,7 +182,12 @@ GLfloat ground2[][3] = {
 	-1, 0.0, 1,
 	1, 0.0, 1,
 };
-
+GLfloat ending[][3] = {
+	-1, -1, 0,
+	1, -1, 0,
+	-1, 1, 0,
+	1, 1, 0,
+};
 GLuint ground_element[] = { 2, 0, 1, 2, 1, 3, };
 GLuint ground_element2[] = { 2, 0, 1, 2, 1, 3, };
 
@@ -213,8 +219,8 @@ GLfloat ground_Texture2[] = {
 GLfloat end_Texture[] = {
 	0, 0.0, 0,
 	1, 0.0, 0,
-	0, 0.0, 1,
-	1, 0.0, 1,
+	0, 1, 0,
+	1, 1, 0,
 };
 
 GLuint cubelement[36] = {
@@ -264,8 +270,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		checkS = false;
 		checkD = true;
 		break;
-		/////////////////////////////카메라가 이동할 수 있는게 짜기 편할 것 같아서 x,y,z로 이동할 수 있게 해놨어!!!///////////////////////
-		///////////카메라 이동시 CameraDirection도 같이 변경해주어야 해서 수정///////////
 	case 'x':
 		CamPosX += 1.0f;
 		CamDirX += 1.f;	//요게 추가한거
@@ -299,6 +303,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 't':
 		checkTest = true;
+		CamPosY = 0.f;
 		CamPosX = 0.0f;
 		CamPosZ = 40.0f;
 		CamDirX = 0.0f;
@@ -560,12 +565,11 @@ GLvoid BackGround(int i) //미완성 잘라서 보이는 오류 있음
 
 GLvoid StageClear(int i)
 {
-	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 2.0f, 10.0f));
-	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, 10.0f));
+	glm::mat4 Scale = glm::scale(glm::mat4(1.0f), glm::vec3(20.f, 20.f, 20.f));
+	glm::mat4 Move = glm::translate(glm::mat4(1.f), glm::vec3(0.0f, 0.0f, 6.0f));
 	glm::mat4 Rotate = glm::mat4(1.0f);
-	Rotate = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	glm::mat4 SR = glm::mat4(1.0f);
-	SR = Move * Rotate * Scale;
+	SR = Move*Scale;
 	unsigned int TextureLocation = glGetUniformLocation(s_program, "outTexture");
 	glUniform1i(TextureLocation, 0);
 	unsigned int TransformLocation = glGetUniformLocation(s_program, "modelTransForm"); //--- 버텍스 세이더에서 모델링 변환 위치 가져오기
@@ -583,6 +587,9 @@ GLvoid Light()
 	int lightPosLocation = glGetUniformLocation(s_program, "lightPos");
 	glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
 	glUniform3f(lightPosLocation, 0, 10, -60);
+	if(checkTest==true)
+		glUniform3f(lightPosLocation, 0, 0, 100);
+
 }
 
 GLvoid InitTexture()
@@ -621,13 +628,13 @@ GLvoid InitTexture()
 			data[i] = stbi_load("green.jpg", &width[i], &height[i], &nrChannels[i], 0);
 			break;
 		case 5:
-			data[i] = stbi_load("end2.jpg", &width[i], &height[i], &nrChannels[i], 0);
+			data[i] = stbi_load("end1.jpg", &width[i], &height[i], &nrChannels[i], 0);
 
 		}
 
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, width[i], height[i], 0, GL_RGB, GL_UNSIGNED_BYTE, data[i]); //---텍스처 이미지 정의
 		glGenerateMipmap(GL_TEXTURE_2D);
-		stbi_image_free(data[i]);
+		//stbi_image_free(data[i]);
 	}
 }
 
@@ -698,13 +705,13 @@ GLvoid EndInitBuffer()
 
 	glGenBuffers(1, &vbo[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ending), ending, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	glEnableVertexAttribArray(0);
 
 	glGenBuffers(1, &vbo[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(ending), ending, GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);	//첫 번째 인자: 인덱스
 	glEnableVertexAttribArray(1);
 
