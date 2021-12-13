@@ -59,12 +59,12 @@ GLfloat CubePosZ = 0.f;
 
 //카메라 위치 변수
 GLfloat CamPosX = 2.0f;
-GLfloat CamPosY = 10.0f;
-GLfloat CamPosZ = 20.f;
+GLfloat CamPosY = 3.0f;
+GLfloat CamPosZ = 4.0f;
 
 //카메라가 보는 방향 변수
 GLfloat CamDirX = CubePosX;
-GLfloat CamDirZ = CubePosZ - 7.0f;
+GLfloat CamDirZ = CubePosZ - 10.0f;
 
 //자동차 움직임
 glm::mat4 Carmoving = glm::mat4(1.f);
@@ -192,7 +192,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CubePosZ -= 2.f;
 		CamDirZ -= 2.f;
 		CamPosZ -= 2.f;
-		cout << "cubeZ:" << CubePosZ << endl;
 		checkW = true;
 		checkA = false;
 		checkS = false;
@@ -209,7 +208,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		CubePosZ += 2.f;
 		CamDirZ += 2.f;
 		CamPosZ += 2.f;
-		cout << "cubeZ:" << CubePosZ << endl;
 		checkW = false;
 		checkA = false;
 		checkS = true;
@@ -228,7 +226,6 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'y':
 		CamPosY += 1.0f;
-		//CamDirY += 1.f;
 		break;
 	case 'z':
 		CamPosZ += 1.0f;
@@ -417,8 +414,8 @@ GLvoid Car1()
 				checkStage2 = true; //스테이지2 시작
 				checkStage1 = false; //충돌 시 스테이지1 자동차 사라짐
 				CamPosX = 2.0f;
-				CamPosY = 10.0f;
-				CamPosZ = CubePosZ + 20.f;
+				CamPosY = 5.0f;
+				CamPosZ = CubePosZ + 8.f;
 				CamDirZ = CubePosZ - 7.f;	//카메라 조정(반대편)
 			}
 			mapcnt++;
@@ -656,7 +653,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 	Camera(); //카메라
 	Projection(); //투영
 
-	if (checkTest)
+	/*if (checkTest)
 	{
 		StageClear(5);
 		CamPosY = 0.f;
@@ -665,7 +662,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 		CamDirX = 0.0f;
 		CamDirZ = 10.0f;
 
-	}
+	}*/
 	if (checkStage1)
 	{
 		BackGround(6);
@@ -674,6 +671,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 		BackGroundBottom(6);
 		if (checkCrash1 == false)
 		{
+			CamDirZ = CamPosZ - 10.0f;
 			Player(); //객체 그리기
 		}
 		Ground(0);
@@ -687,6 +685,7 @@ void drawScene() //--- glutDisplayFunc()함수로 등록한 그리기 콜백 함수
 		BackGroundBottom(7);
 		if (checkCrash2 == false)
 		{
+			CamDirZ = CamPosZ - 5.0f;
 			Player();
 		}
 		Ground(1);
